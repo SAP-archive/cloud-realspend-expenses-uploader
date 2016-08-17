@@ -1,0 +1,53 @@
+{
+  "d061519": {
+    "tag": {
+      "Priority": {
+        "Low": [
+          {
+            "amount": 42,
+            "currency": "EUR",
+            "period": 2016
+          }
+        ],
+        "High": [
+          {
+            "amount": 3000.6,
+            "currency": "EUR",
+            "period": 2016
+          },
+          {
+            "amount": 3000.5,
+            "currency": "EUR",
+            "period": 2015
+          }
+        ]
+      }
+    },
+    "account": {
+      "Advertisement": [
+        {
+          "amount": 100.8,
+          "currency": "EUR",
+          "period": 2016
+        }
+      ],
+      "Equipment": [
+        {
+          "amount": 200,
+          "currency": "EUR",
+          "period": 2016
+        },
+        {
+          "amount": 300,
+          "currency": "EUR",
+          "period": 2015
+        }
+      ]
+    },
+    "accountnode": {},
+    "costcenter": {},
+    "costcenternode": {},
+    "internalorder": {}
+  },
+  "alex": {}
+}
