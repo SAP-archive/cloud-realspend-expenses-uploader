@@ -39,4 +39,4 @@ Notes
 
 License
 -------
-See the [License](https://github.com/AihamTalebSAP/RealspendExpensesUploader/blob/master/License.md) file for license rights and limitations (ASL 2.0).
+See the [License](https://github.com/SAP/cloud-realspend-expenses-uploader/blob/master/License.md) file for license rights and limitations (ASL 2.0).
