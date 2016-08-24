@@ -68,6 +68,7 @@ public class ExpenseHcpOutput extends AbstractOutput
         }
         catch( Exception e ) {
             e.printStackTrace();
+            return false;
         }
 
         return true;
