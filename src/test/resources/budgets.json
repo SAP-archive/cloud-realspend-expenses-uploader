@@ -1,46 +1,46 @@
 {
-  "d061519": {
+  "conan": {
     "tag": {
       "Priority": {
         "Low": [
           {
             "amount": 42,
             "currency": "EUR",
-            "period": 2016
+            "year": 2016
           }
         ],
         "High": [
           {
             "amount": 3000.6,
             "currency": "EUR",
-            "period": 2016
+            "year": 2016
           },
           {
             "amount": 3000.5,
             "currency": "EUR",
-            "period": 2015
+            "year": 2015
           }
         ]
       }
     },
     "account": {
-      "Advertisement": [
+      "400000": [
         {
           "amount": 100.8,
           "currency": "EUR",
-          "period": 2016
+          "year": 2016
         }
       ],
-      "Equipment": [
+      "430000": [
         {
           "amount": 200,
           "currency": "EUR",
-          "period": 2016
+          "year": 2016
         },
         {
           "amount": 300,
           "currency": "EUR",
-          "period": 2015
+          "year": 2015
         }
       ]
     },

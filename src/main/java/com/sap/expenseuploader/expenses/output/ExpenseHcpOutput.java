@@ -8,6 +8,8 @@ import org.apache.http.client.fluent.Request;
 import org.apache.http.client.fluent.Response;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.entity.ContentType;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
@@ -17,6 +19,7 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.sap.expenseuploader.Helper.getBodyFromResponse;
 import static com.sap.expenseuploader.Helper.getCsrfToken;
 import static com.sap.expenseuploader.Helper.withOptionalProxy;
 
@@ -26,12 +29,14 @@ import static com.sap.expenseuploader.Helper.withOptionalProxy;
  */
 public class ExpenseHcpOutput extends AbstractOutput
 {
+    private final Logger logger = LogManager.getLogger(this.getClass());
+
     public ExpenseHcpOutput( Config config )
     {
         super(config);
         if( config.getOutput() == null || config.getOutput().isEmpty() ) {
             // This is here because the HTTP client has a hard to read error message
-            System.out.println("Output URL not set!");
+            logger.error("Output URL not set!");
         }
     }
 
@@ -43,11 +48,11 @@ public class ExpenseHcpOutput extends AbstractOutput
             String csrfToken = getCsrfToken(this.config);
 
             // Print current count
-            long expenseCount = getExpenseCount();
-            System.out.println("Found " + expenseCount + " expenses currently in HCP");
+            //long expenseCount = getExpenseCount();
+            //logger.info("Found " + expenseCount + " expenses currently in HCP");
 
             // Upload
-            for( String user : this.config.getUserList() ) {
+            for (String user : this.config.getCostCenterUserList()) {
                 List<String> costCenters = this.config.getCostCenters(user);
                 List<Expense> userExpenses = new ArrayList<>();
                 for( Expense expense : expenses ) {
@@ -56,15 +61,18 @@ public class ExpenseHcpOutput extends AbstractOutput
                     }
                 }
                 if( userExpenses.isEmpty() ) {
-                    System.out.println("No expenses for user " + user);
+                    logger.info("No expenses to put for user " + user);
                     continue;
                 }
                 uploadExpenses(userExpenses, user, csrfToken);
             }
 
             // Print current count
-            expenseCount = getExpenseCount();
-            System.out.println("Found " + expenseCount + " expenses currently in HCP");
+            //expenseCount = getExpenseCount();
+            //logger.info("Found " + expenseCount + " expenses currently in HCP");
+
+            // TODO this should have gone up because of the upload,
+            // but the API does not let us check the expenses of other users
         }
         catch( Exception e ) {
             e.printStackTrace();
@@ -77,20 +85,34 @@ public class ExpenseHcpOutput extends AbstractOutput
     private long getExpenseCount()
         throws URISyntaxException, IOException, ParseException
     {
-        URIBuilder uriBuilder = new URIBuilder(this.config.getOutput() + "/rest/expense/count");
-        Response response = withOptionalProxy(this.config.getProxy(), Request.Get(uriBuilder.build())).execute();
+        // TODO this does not show the expenses of other users, so on-behalf postings can not be checked.
 
-        // Parse JSON
-        String responseAsString = response.returnContent().toString();
-        JSONParser parser = new JSONParser();
-        JSONObject propertyMap = (JSONObject) parser.parse(responseAsString);
-        return (Long) propertyMap.get("count");
+        URIBuilder uriBuilder = new URIBuilder(this.config.getOutput() + "/rest/expense/count");
+        Request request = Request.Get(uriBuilder.build());
+        HttpResponse response = withOptionalProxy(this.config.getProxy(), request).execute().returnResponse();
+
+        // Check response
+        int statusCode = response.getStatusLine().getStatusCode();
+        if ( statusCode == 200 ) {
+            // Parse JSON
+            String responseAsString = getBodyFromResponse(response);
+            JSONParser parser = new JSONParser();
+            JSONObject propertyMap = (JSONObject) parser.parse(responseAsString);
+            return (Long) propertyMap.get("count");
+        }
+        else {
+            logger.error(String.format("Got http code %s while uploading %s expenses for user %s",
+                    statusCode,
+                    config.getHcpUser()));
+            logger.error("URL was: " + uriBuilder.build());
+            logger.error("Error is: " + getBodyFromResponse(response));
+            throw new IOException("Unable to get count of expenses");
+        }
     }
 
     private void uploadExpenses( List<Expense> expenses, String user, String csrfToken )
         throws URISyntaxException, IOException
     {
-
         // Create JSON payload
         Gson gson = new GsonBuilder().setDateFormat("yyyy-MM-dd").create();
         JsonArray expensesAsJson = (JsonArray) gson.toJsonTree(expenses);
@@ -103,27 +125,28 @@ public class ExpenseHcpOutput extends AbstractOutput
         JsonObject payload = new JsonObject();
         payload.add("expenses", expensesAsJson);
         payload.addProperty("user", user);
+        logger.debug(payload.toString());
 
         // TODO delta merge: Compare expenses with what's already there
 
         // Upload
         URIBuilder uriBuilder = new URIBuilder(this.config.getOutput() + "/rest/expense");
-        Response response = withOptionalProxy(this.config.getProxy(),
-            Request.Post(uriBuilder.build())
-                .addHeader("x-csrf-token", csrfToken)
-                .bodyString(payload.toString(), ContentType.APPLICATION_JSON)).execute();
+        Request request = Request.Post(uriBuilder.build())
+            .addHeader("x-csrf-token", csrfToken)
+            .bodyString(payload.toString(), ContentType.APPLICATION_JSON);
+        HttpResponse response = withOptionalProxy(this.config.getProxy(), request).execute().returnResponse();
 
         // Check response
-        HttpResponse httpResponse = response.returnResponse();
-        int statusCode = httpResponse.getStatusLine().getStatusCode();
+        int statusCode = response.getStatusLine().getStatusCode();
         if( statusCode == 200 ) {
-            System.out.println(String.format("Successfully uploaded %s expenses for user %s", expenses.size(), user));
+            logger.info(String.format("Successfully uploaded %s expenses for user %s", expenses.size(), user));
         } else {
-            System.out.println(String.format("Got http code %s while uploading %s expenses for user %s",
+            logger.error(String.format("Got http code %s while uploading %s expenses for user %s",
                 statusCode,
                 expenses.size(),
                 user));
-            System.out.println(httpResponse);
+            logger.error("URL was: " + uriBuilder.build());
+            logger.error("Error is: " + getBodyFromResponse(response));
         }
     }
 }

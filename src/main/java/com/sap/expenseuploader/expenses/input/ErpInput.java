@@ -4,6 +4,8 @@ import com.sap.conn.jco.*;
 import com.sap.expenseuploader.Config;
 import com.sap.expenseuploader.model.ControllingDocumentData;
 import com.sap.expenseuploader.model.Expense;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -22,6 +24,8 @@ public class ErpInput extends AbstractInput
     private static final String LINE_ITEMS_TABLE = "LINE_ITEMS";
     private static final String INPUT_DOCUMENT_STRUCTURE = "DOCUMENT";
     private static final String SELECT_CRITERIA_TABLE = "SELECT_CRITERIA";
+
+    private final Logger logger = LogManager.getLogger(this.getClass());
 
     public ErpInput( Config config )
     {
@@ -89,13 +93,13 @@ public class ErpInput extends AbstractInput
 
             // Did we get data?
             if( docHeaders.isEmpty() ) {
-                System.out.println("No doc headers!");
+                logger.warn("No doc headers!");
             }
             if( lineItems.isEmpty() ) {
-                System.out.println("No line items!");
+                logger.warn("No line items!");
                 return null;
             }
-            System.out.println("Found " + lineItems.getNumRows() + " line items!");
+            logger.info("Found " + lineItems.getNumRows() + " line items!");
 
             // Store temporarily relevant information from the header document
             // in a HashMap to access them efficiently
@@ -113,7 +117,7 @@ public class ErpInput extends AbstractInput
 
                 String documentKey = lineItems.getString("DOC_NO");
                 if( !headerDocumentsMap.containsKey(documentKey) ) {
-                    System.out.println(
+                    logger.info(
                         "Key " + documentKey + " not found in header documents table, skipping line item ...");
                     lineItems.nextRow();
                     continue;
@@ -130,15 +134,16 @@ public class ErpInput extends AbstractInput
                     lineItems.getString("VALUE_COCUR"),
                     headerDocumentsMap.get(documentKey).getDocumentCurrency());
                 expenses.add(row);
+                logger.debug("Got expense: " + row.toString());
             }
         }
         catch( JCoException e ) {
-            System.out.println("There was a problem downloading data from the ERP!");
+            logger.error("There was a problem downloading data from the ERP!");
             e.printStackTrace();
             return null;
         }
         catch( ParseException e ) {
-            System.out.println("There was a problem parsing a date from the ERP!");
+            logger.error("There was a problem parsing a date from the ERP!");
             e.printStackTrace();
             return null;
         }

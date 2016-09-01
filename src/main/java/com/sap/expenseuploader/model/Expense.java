@@ -1,6 +1,8 @@
 package com.sap.expenseuploader.model;
 
 import com.google.gson.annotations.SerializedName;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -10,6 +12,8 @@ import java.util.List;
 
 public class Expense implements Comparable<Expense>
 {
+    private transient final Logger logger = LogManager.getLogger(this.getClass());
+
     private Date date;
     private String type;
     @SerializedName( "cost-center" )
@@ -36,7 +40,7 @@ public class Expense implements Comparable<Expense>
     {
         this.fields = fields;
         if( fields.size() != 10 ) {
-            System.out.println("Called Expense with " + fields.size() + " parameters instead of 10");
+            logger.error("Called Expense with " + fields.size() + " parameters instead of 10");
         }
 
         // Fill fixed fields

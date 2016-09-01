@@ -2,6 +2,8 @@ package com.sap.expenseuploader.expenses.output;
 
 import com.sap.expenseuploader.Config;
 import com.sap.expenseuploader.model.Expense;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
@@ -23,6 +25,8 @@ import java.util.List;
  */
 public class ExcelOutput extends AbstractOutput
 {
+    private final Logger logger = LogManager.getLogger(this.getClass());
+
     public ExcelOutput( Config config )
     {
         super(config);
@@ -31,7 +35,6 @@ public class ExcelOutput extends AbstractOutput
     @Override
     public boolean putExpenses( List<Expense> expenses )
     {
-
         int rowCount = 0;
         File file = new File(config.getOutput());
         try( final Workbook wb = new HSSFWorkbook() ) {
@@ -72,11 +75,11 @@ public class ExcelOutput extends AbstractOutput
             fileOut.close();
         }
         catch( IOException e ) {
-            System.out.println("Error writing to file: " + file.getAbsolutePath());
+            logger.error("Error writing to file: " + file.getAbsolutePath());
             e.printStackTrace();
             return false;
         }
-        System.out.println("Wrote " + rowCount + " expenses into XLS file " + file.getAbsolutePath());
+        logger.info("Wrote " + rowCount + " expenses into XLS file " + file.getAbsolutePath());
         return true;
     }
 }

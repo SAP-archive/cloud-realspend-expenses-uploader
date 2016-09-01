@@ -10,25 +10,25 @@ public class BudgetEntry
     /**
      * the reporting period
      */
-    public long period;
+    public long year;
 
-    public BudgetEntry( double amount, String currency, long period )
+    public BudgetEntry( double amount, String currency, long year )
     {
         this.amount = amount;
         this.currency = currency;
-        this.period = period;
+        this.year = year;
     }
 
     public BudgetEntry( JSONObject obj )
     {
         this.amount = Double.parseDouble(obj.get("amount").toString());
         this.currency = (String) obj.get("currency");
-        this.period = (long) obj.get("period");
+        this.year = (long) obj.get("year");
     }
 
     @Override
     public String toString()
     {
-        return String.format("[%s, %s, %s]", amount, currency, period);
+        return String.format("[%s, %s, %s]", amount, currency, year);
     }
 }

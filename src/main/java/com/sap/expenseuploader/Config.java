@@ -4,6 +4,8 @@ import com.sap.conn.jco.JCoDestination;
 import com.sap.conn.jco.JCoDestinationManager;
 import com.sap.conn.jco.JCoException;
 import com.sap.expenseuploader.model.BudgetEntry;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -20,6 +22,8 @@ import java.util.*;
  */
 public class Config
 {
+    private final Logger logger = LogManager.getLogger(this.getClass());
+
     // Command line parameters
     private String input;
     private String output;
@@ -108,7 +112,7 @@ public class Config
             cal.add(Calendar.DATE, -1);
             DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
             this.toTime = dateFormat.format(cal.getTime());
-            System.out.println("Set to-time to " + this.toTime);
+            logger.info("Setting to-time to " + this.toTime);
         }
         return this.toTime;
     }
@@ -157,6 +161,8 @@ public class Config
     private void readBudgetsFromJson( String path )
         throws IOException, ParseException
     {
+        // TODO the user might not be in the costcenters, would that be a problem?
+
         JSONParser parser = new JSONParser();
         JSONObject userMap = (JSONObject) parser.parse(new FileReader(path));
         for( Object userObject : userMap.keySet() ) {
@@ -293,10 +299,18 @@ public class Config
         return result;
     }
 
-    public List<String> getUserList()
+    public List<String> getCostCenterUserList()
     {
-        // TODO users are also in the budget config json
         List<String> result = new ArrayList<>(userCostCenters.keySet());
+        Collections.sort(result);
+        return result;
+    }
+
+    public List<String> getBudgetUserList()
+    {
+        Set<String> users = new HashSet<>(userMasterDataBudgets.keySet());
+        users.addAll(userTagBudgets.keySet());
+        List<String> result = new ArrayList<>(users);
         Collections.sort(result);
         return result;
     }

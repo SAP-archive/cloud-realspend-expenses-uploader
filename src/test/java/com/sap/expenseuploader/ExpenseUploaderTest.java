@@ -108,8 +108,8 @@ public class ExpenseUploaderTest
             "src/test/resources/budgets.json",
             "src/test/resources/costcenters.json",
             false);
-        assertEquals("[0001, 0002, 0019, testy]", config.getCostCenterList().toString());
-        assertEquals("[alex, bob, d061519]", config.getUserList().toString());
+        assertEquals("[0001, 0002, 0019, tbtest, testy]", config.getCostCenterList().toString());
+        assertEquals("[alex, bob, conan]", config.getCostCenterUserList().toString());
     }
 
     @Test
