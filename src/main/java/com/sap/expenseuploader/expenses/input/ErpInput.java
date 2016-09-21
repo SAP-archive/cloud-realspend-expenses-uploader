@@ -1,7 +1,8 @@
 package com.sap.expenseuploader.expenses.input;
 
 import com.sap.conn.jco.*;
-import com.sap.expenseuploader.Config;
+import com.sap.expenseuploader.config.CostcenterConfig;
+import com.sap.expenseuploader.config.ExpenseInputConfig;
 import com.sap.expenseuploader.model.ControllingDocumentData;
 import com.sap.expenseuploader.model.Expense;
 import org.apache.logging.log4j.LogManager;
@@ -16,7 +17,7 @@ import java.util.List;
  * Reads expenses from the ERP system, whose configurations should be stored
  * in the file <system-name>.jcoDestination. E.g. system.jcoDestination
  */
-public class ErpInput extends AbstractInput
+public class ErpInput implements ExpenseInput
 {
     private static final String ABAP_SYS_NAME = "SYSTEM";
     private static final String BAPI_NAME = "BAPI_ACC_CO_DOCUMENT_FIND";
@@ -27,9 +28,12 @@ public class ErpInput extends AbstractInput
 
     private final Logger logger = LogManager.getLogger(this.getClass());
 
-    public ErpInput( Config config )
-    {
-        super(config);
+    ExpenseInputConfig expenseInputConfig;
+    CostcenterConfig costcenterConfig;
+
+    public ErpInput(ExpenseInputConfig expenseInputConfig, CostcenterConfig costcenterConfig) {
+        this.expenseInputConfig = expenseInputConfig;
+        this.costcenterConfig = costcenterConfig;
     }
 
     private static String stripLeadingZeros( String str )
@@ -50,7 +54,7 @@ public class ErpInput extends AbstractInput
 
         // Get all expenses via JCO
         try {
-            JCoDestination destination = config.getJcoDestination(config.getInput());
+            JCoDestination destination = expenseInputConfig.getJcoDestination();
             JCoRepository repository = destination.getRepository();
             JCoContext.begin(destination);
             JCoFunction bapiAccCoDocFind = repository.getFunctionTemplate(BAPI_NAME).getFunction();
@@ -60,9 +64,9 @@ public class ErpInput extends AbstractInput
 
             // Fill BAPI Imports
             JCoStructure input = bapiAccCoDocFind.getImportParameterList().getStructure(INPUT_DOCUMENT_STRUCTURE);
-            input.setValue("CO_AREA", config.getControllingArea());
-            if( config.hasPeriod() ) {
-                input.setValue("PERIOD", config.getPeriod());
+            input.setValue("CO_AREA", expenseInputConfig.getControllingArea());
+            if( expenseInputConfig.hasPeriod() ) {
+                input.setValue("PERIOD", expenseInputConfig.getPeriod());
             }
 
             JCoTable table = bapiAccCoDocFind.getTableParameterList().getTable(SELECT_CRITERIA_TABLE);
@@ -72,11 +76,11 @@ public class ErpInput extends AbstractInput
             table.setValue("FIELD", "POSTGDATE");
             table.setValue("SIGN", "I");
             table.setValue("OPTION", "BT");
-            table.setValue("LOW", config.getFromTime());
-            table.setValue("HIGH", config.getToTime()); // TODO this might be null, set to yesterday
+            table.setValue("LOW", expenseInputConfig.getFromTime());
+            table.setValue("HIGH", expenseInputConfig.getToTime());
 
             // Add all cost centers to the query
-            for( String costCenter : config.getCostCenterList() ) {
+            for( String costCenter : costcenterConfig.getCostCenterList() ) {
                 table.appendRow();
                 table.setValue("FIELD", "KOSTL");
                 table.setValue("SIGN", "I");
@@ -99,7 +103,7 @@ public class ErpInput extends AbstractInput
                 logger.warn("No line items!");
                 return null;
             }
-            logger.info("Found " + lineItems.getNumRows() + " line items!");
+            logger.info("Found " + lineItems.getNumRows() + " line items in the ERP");
 
             // Store temporarily relevant information from the header document
             // in a HashMap to access them efficiently

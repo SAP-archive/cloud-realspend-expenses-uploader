@@ -2,6 +2,9 @@ package com.sap.expenseuploader;
 
 import com.sap.conn.jco.JCoDestinationManager;
 import com.sap.conn.jco.JCoException;
+import com.sap.expenseuploader.config.BudgetConfig;
+import com.sap.expenseuploader.config.ExpenseInputConfig;
+import com.sap.expenseuploader.config.CostcenterConfig;
 import com.sap.expenseuploader.expenses.input.ExcelInput;
 import com.sap.expenseuploader.expenses.output.ExcelOutput;
 import com.sap.expenseuploader.model.Expense;
@@ -24,22 +27,24 @@ public class ExpenseUploaderTest
     public void testErpInput()
         throws JCoException
     {
-        Config config = mock(Config.class);
-        when(config.getJcoDestination("SYSTEM")).thenReturn(JCoDestinationManager.getDestination("SYSTEM"));
-        when(config.getFromTime()).thenReturn("20120101");
-        when(config.getToTime()).thenReturn("20170101");
-        when(config.getControllingArea()).thenReturn("0001");
-        when(config.getPeriod()).thenReturn("004");
-        when(config.getCostCenterList()).thenReturn(Arrays.asList("MARKETING", "SAP-DUMMY"));
+        ExpenseInputConfig eInConfig = mock(ExpenseInputConfig.class);
+        when(eInConfig.getJcoDestination()).thenReturn(JCoDestinationManager.getDestination("SYSTEM"));
+        when(eInConfig.getFromTime()).thenReturn("20120101");
+        when(eInConfig.getToTime()).thenReturn("20170101");
+        when(eInConfig.getControllingArea()).thenReturn("0001");
+        when(eInConfig.getPeriod()).thenReturn("004");
+
+        CostcenterConfig eOutConfig = mock(CostcenterConfig.class);
+        when(eOutConfig.getCostCenterList()).thenReturn(Arrays.asList("MARKETING", "SAP-DUMMY"));
+
+        // TODO use this on an ERP test system
     }
 
     @Test
     public void testExcelInput()
     {
         try {
-            Config config = mock(Config.class);
-            when(config.getInput()).thenReturn("src/test/resources/Input_Excel.xls");
-            ExcelInput excelInput = new ExcelInput(config);
+            ExcelInput excelInput = new ExcelInput("src/test/resources/Input_Excel.xls");
             List<Expense> expenses = excelInput.getExpenses();
             assertEquals(54, expenses.size());
         }
@@ -52,11 +57,9 @@ public class ExpenseUploaderTest
     public void testExcelOutput()
         throws ParseException
     {
-        Config config = mock(Config.class);
-        when(config.getOutput()).thenReturn("expenses.xls");
         List<Expense> expenses = new ArrayList<>();
         expenses.add(new Expense("2000-01-01", "FOO", "cc", "acc", "pers", "ord", "con", "req", "1090.01", "cur"));
-        ExcelOutput output = new ExcelOutput(config);
+        ExcelOutput output = new ExcelOutput("expenses.xls");
         output.putExpenses(expenses);
         File outputFile = new File("expenses.xls");
         assertTrue(outputFile.exists());
@@ -95,44 +98,19 @@ public class ExpenseUploaderTest
     }
 
     @Test
-    public void testConfig()
+    public void testCostcenterConfig()
         throws IOException, ParseException, org.json.simple.parser.ParseException
     {
-        Config config = new Config("",
-            "",
-            "",
-            "",
-            "",
-            "",
-            "",
-            "src/test/resources/budgets.json",
-            "src/test/resources/costcenters.json",
-            false);
+        CostcenterConfig config = new CostcenterConfig();
         assertEquals("[0001, 0002, 0019, tbtest, testy]", config.getCostCenterList().toString());
         assertEquals("[alex, bob, conan]", config.getCostCenterUserList().toString());
     }
 
     @Test
-    public void testTagBudgets()
+    public void testBudgetConfig()
         throws IOException, org.json.simple.parser.ParseException
     {
-        Config config = new Config("",
-            "",
-            "",
-            "",
-            "",
-            "",
-            "",
-            "src/test/resources/budgets.json",
-            "src/test/resources/costcenters.json",
-            false);
+        BudgetConfig config = new BudgetConfig();
         assertEquals("{}", config.getTagBudgetsOfUser("alex").toString());
     }
-
-    // TODO Integration tests
-    // TODO Load from ERP, save to XLS
-    // TODO Load from XLS, save to HCP
-    // TODO Load from ERP, save to HCP
-    // TODO Load from XLS, save to XLS (there should be an error)
-
 }

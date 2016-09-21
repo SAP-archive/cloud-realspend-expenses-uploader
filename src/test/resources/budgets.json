@@ -1,15 +1,15 @@
 {
   "conan": {
     "tag": {
-      "Priority": {
-        "Low": [
+      "Produkte": {
+        "Produkt A": [
           {
             "amount": 42,
             "currency": "EUR",
-            "year": 2016
+            "year": 2015
           }
         ],
-        "High": [
+        "Produkt B": [
           {
             "amount": 3000.6,
             "currency": "EUR",
@@ -23,29 +23,21 @@
         ]
       }
     },
-    "account": {
-      "400000": [
-        {
-          "amount": 100.8,
-          "currency": "EUR",
-          "year": 2016
-        }
-      ],
-      "430000": [
+    "costcenter": {
+      "1": [
         {
           "amount": 200,
           "currency": "EUR",
           "year": 2016
         },
         {
-          "amount": 300,
+          "amount": 12345,
           "currency": "EUR",
           "year": 2015
         }
       ]
     },
     "accountnode": {},
-    "costcenter": {},
     "costcenternode": {},
     "internalorder": {}
   },

@@ -1,11 +1,11 @@
 package com.sap.expenseuploader.expenses.output;
 
 import com.google.gson.*;
-import com.sap.expenseuploader.Config;
+import com.sap.expenseuploader.config.CostcenterConfig;
+import com.sap.expenseuploader.config.HcpConfig;
 import com.sap.expenseuploader.model.Expense;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.fluent.Request;
-import org.apache.http.client.fluent.Response;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.entity.ContentType;
 import org.apache.logging.log4j.LogManager;
@@ -19,41 +19,36 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.sap.expenseuploader.Helper.getBodyFromResponse;
-import static com.sap.expenseuploader.Helper.getCsrfToken;
-import static com.sap.expenseuploader.Helper.withOptionalProxy;
+import static com.sap.expenseuploader.config.HcpConfig.getBodyFromResponse;
 
 /**
  * This is the most common method of output, to upload expenses to the HCP realspend
  * backend.
  */
-public class ExpenseHcpOutput extends AbstractOutput
+public class ExpenseHcpOutput implements ExpenseOutput
 {
     private final Logger logger = LogManager.getLogger(this.getClass());
 
-    public ExpenseHcpOutput( Config config )
-    {
-        super(config);
-        if( config.getOutput() == null || config.getOutput().isEmpty() ) {
-            // This is here because the HTTP client has a hard to read error message
-            logger.error("Output URL not set!");
-        }
+    private HcpConfig hcpConfig;
+    private CostcenterConfig costcenterConfig;
+
+    public ExpenseHcpOutput(HcpConfig hcpConfig, CostcenterConfig costcenterConfig) {
+        this.hcpConfig = hcpConfig;
+        this.costcenterConfig = costcenterConfig;
     }
 
     @Override
-    public boolean putExpenses( List<Expense> expenses )
+    public void putExpenses( List<Expense> expenses )
     {
-        try {
-            // Get CSRF token and authenticate
-            String csrfToken = getCsrfToken(this.config);
+        logger.info("Writing expenses to HCP at " + this.hcpConfig.getHcpUrl());
 
-            // Print current count
-            //long expenseCount = getExpenseCount();
-            //logger.info("Found " + expenseCount + " expenses currently in HCP");
+        try {
+            // Fetch CSRF token and authenticate
+            String csrfToken = this.hcpConfig.getCsrfToken();
 
             // Upload
-            for (String user : this.config.getCostCenterUserList()) {
-                List<String> costCenters = this.config.getCostCenters(user);
+            for (String user : this.costcenterConfig.getCostCenterUserList()) {
+                List<String> costCenters = this.costcenterConfig.getCostCenters(user);
                 List<Expense> userExpenses = new ArrayList<>();
                 for( Expense expense : expenses ) {
                     if( expense.isInCostCenter(costCenters) ) {
@@ -66,20 +61,10 @@ public class ExpenseHcpOutput extends AbstractOutput
                 }
                 uploadExpenses(userExpenses, user, csrfToken);
             }
-
-            // Print current count
-            //expenseCount = getExpenseCount();
-            //logger.info("Found " + expenseCount + " expenses currently in HCP");
-
-            // TODO this should have gone up because of the upload,
-            // but the API does not let us check the expenses of other users
         }
         catch( Exception e ) {
-            e.printStackTrace();
-            return false;
+            logger.error(e);
         }
-
-        return true;
     }
 
     private long getExpenseCount()
@@ -87,9 +72,9 @@ public class ExpenseHcpOutput extends AbstractOutput
     {
         // TODO this does not show the expenses of other users, so on-behalf postings can not be checked.
 
-        URIBuilder uriBuilder = new URIBuilder(this.config.getOutput() + "/rest/expense/count");
+        URIBuilder uriBuilder = new URIBuilder(this.hcpConfig.getHcpUrl() + "/rest/expense/count");
         Request request = Request.Get(uriBuilder.build());
-        HttpResponse response = withOptionalProxy(this.config.getProxy(), request).execute().returnResponse();
+        HttpResponse response = this.hcpConfig.withOptionalProxy(request).execute().returnResponse();
 
         // Check response
         int statusCode = response.getStatusLine().getStatusCode();
@@ -102,8 +87,7 @@ public class ExpenseHcpOutput extends AbstractOutput
         }
         else {
             logger.error(String.format("Got http code %s while uploading %s expenses for user %s",
-                    statusCode,
-                    config.getHcpUser()));
+                    statusCode, this.hcpConfig.getHcpUser()));
             logger.error("URL was: " + uriBuilder.build());
             logger.error("Error is: " + getBodyFromResponse(response));
             throw new IOException("Unable to get count of expenses");
@@ -118,9 +102,8 @@ public class ExpenseHcpOutput extends AbstractOutput
         JsonArray expensesAsJson = (JsonArray) gson.toJsonTree(expenses);
         for( JsonElement e : expensesAsJson ) {
             // Add approver to each expense
-            // TODO can't the API do that?
             JsonObject expenseAsJson = (JsonObject) e;
-            expenseAsJson.addProperty("approver", this.config.getHcpUser());
+            expenseAsJson.addProperty("approver", this.hcpConfig.getHcpUser());
         }
         JsonObject payload = new JsonObject();
         payload.add("expenses", expensesAsJson);
@@ -128,13 +111,15 @@ public class ExpenseHcpOutput extends AbstractOutput
         logger.debug(payload.toString());
 
         // TODO delta merge: Compare expenses with what's already there
+        // Blocked until we have on-behalf lookup
+        // The Helper class already has a method to compare new and existing expenses
 
         // Upload
-        URIBuilder uriBuilder = new URIBuilder(this.config.getOutput() + "/rest/expense");
+        URIBuilder uriBuilder = new URIBuilder(this.hcpConfig.getHcpUrl() + "/rest/expense");
         Request request = Request.Post(uriBuilder.build())
             .addHeader("x-csrf-token", csrfToken)
             .bodyString(payload.toString(), ContentType.APPLICATION_JSON);
-        HttpResponse response = withOptionalProxy(this.config.getProxy(), request).execute().returnResponse();
+        HttpResponse response = this.hcpConfig.withOptionalProxy(request).execute().returnResponse();
 
         // Check response
         int statusCode = response.getStatusLine().getStatusCode();

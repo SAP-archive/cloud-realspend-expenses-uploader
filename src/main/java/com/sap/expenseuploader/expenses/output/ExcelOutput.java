@@ -1,6 +1,5 @@
 package com.sap.expenseuploader.expenses.output;
 
-import com.sap.expenseuploader.Config;
 import com.sap.expenseuploader.model.Expense;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -23,22 +22,24 @@ import java.util.List;
  * and uploading them to the HCP backend. This step enables changes and checks to those
  * expenses from the ERP
  */
-public class ExcelOutput extends AbstractOutput
+public class ExcelOutput implements ExpenseOutput
 {
     private final Logger logger = LogManager.getLogger(this.getClass());
 
-    public ExcelOutput( Config config )
-    {
-        super(config);
+    private File outputFile;
+
+    public ExcelOutput(String path) {
+        this.outputFile = new File(path);
     }
 
     @Override
-    public boolean putExpenses( List<Expense> expenses )
+    public void putExpenses( List<Expense> expenses )
     {
+        logger.info("Writing expenses to excel file " + this.outputFile.getAbsolutePath());
+
         int rowCount = 0;
-        File file = new File(config.getOutput());
         try( final Workbook wb = new HSSFWorkbook() ) {
-            FileOutputStream fileOut = new FileOutputStream(file);
+            FileOutputStream fileOut = new FileOutputStream(this.outputFile);
             Sheet sheet = wb.createSheet("Sheet");
 
             // Write first line
@@ -75,11 +76,9 @@ public class ExcelOutput extends AbstractOutput
             fileOut.close();
         }
         catch( IOException e ) {
-            logger.error("Error writing to file: " + file.getAbsolutePath());
+            logger.error("Error writing to file: " + this.outputFile.getAbsolutePath());
             e.printStackTrace();
-            return false;
         }
-        logger.info("Wrote " + rowCount + " expenses into XLS file " + file.getAbsolutePath());
-        return true;
+        logger.info("Wrote " + rowCount + " expenses into XLS file " + this.outputFile.getAbsolutePath());
     }
 }

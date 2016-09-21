@@ -2,7 +2,8 @@ package com.sap.expenseuploader.budgets;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import com.sap.expenseuploader.Config;
+import com.sap.expenseuploader.config.BudgetConfig;
+import com.sap.expenseuploader.config.HcpConfig;
 import com.sap.expenseuploader.model.BudgetEntry;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.fluent.Request;
@@ -16,14 +17,14 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
+import javax.management.relation.RoleNotFoundException;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.sap.expenseuploader.Helper.getBodyFromResponse;
-import static com.sap.expenseuploader.Helper.withOptionalProxy;
+import static com.sap.expenseuploader.config.HcpConfig.getBodyFromResponse;
 
 /**
  * Uploads the budgets, which are stored in the budgets.json file,
@@ -33,30 +34,31 @@ public class BudgetHcpOutput
 {
     private final Logger logger = LogManager.getLogger(this.getClass());
 
-    Config config;
+    BudgetConfig budgetConfig;
+    HcpConfig hcpConfig;
 
     private Map<String, Long> tagGroupIds = new HashMap<>();
     private Map<String, Map<String, Long>> tagNameIds = new HashMap<>();
 
-    public BudgetHcpOutput( Config config )
+    public BudgetHcpOutput( BudgetConfig budgetConfig, HcpConfig hcpConfig )
     {
-        this.config = config;
+        this.budgetConfig = budgetConfig;
+        this.hcpConfig = hcpConfig;
     }
 
-    public void putBudgets( String csrfToken )
-        throws IOException, URISyntaxException, ParseException
-    {
+    public void putBudgets()
+            throws IOException, URISyntaxException, ParseException, RoleNotFoundException {
         this.fillTagIdMaps();
 
-        for (String user : config.getBudgetUserList()) {
+        for (String user: budgetConfig.getBudgetUserList()) {
 
             logger.info("Uploading budgets for tags of user " + user);
 
             // Upload tag budgets
-            Map<String, Map<String, List<BudgetEntry>>> userTagGroups = config.getTagBudgetsOfUser(user);
+            Map<String, Map<String, List<BudgetEntry>>> userTagGroups = budgetConfig.getTagBudgetsOfUser(user);
             for( String userTagGroup : userTagGroups.keySet() ) {
                 Map<String, List<BudgetEntry>> entries = userTagGroups.get(userTagGroup);
-                putTagBudgets(userTagGroup, user, entries, csrfToken);
+                putTagBudgets(userTagGroup, user, entries);
             }
 
             logger.info("Uploading budgets for master data of user " + user);
@@ -64,32 +66,32 @@ public class BudgetHcpOutput
             Map<String, List<BudgetEntry>> masterDataBudgets;
 
             // Upload account budgets
-            masterDataBudgets = config.getMasterDataBudgetsOfUser(user, "account");
-            putMasterDataBudgets("account", user, masterDataBudgets, csrfToken);
+            masterDataBudgets = budgetConfig.getMasterDataBudgetsOfUser(user, "account");
+            putMasterDataBudgets("account", user, masterDataBudgets);
 
             // Upload account node budgets
-            masterDataBudgets = config.getMasterDataBudgetsOfUser(user, "accountnode");
-            putMasterDataBudgets("account/hierarchy/node", user, masterDataBudgets, csrfToken);
+            masterDataBudgets = budgetConfig.getMasterDataBudgetsOfUser(user, "accountnode");
+            putMasterDataBudgets("account/hierarchy/node", user, masterDataBudgets);
 
             // Upload cost center budgets
-            masterDataBudgets = config.getMasterDataBudgetsOfUser(user, "costcenter");
-            putMasterDataBudgets("cost-center", user, masterDataBudgets, csrfToken);
+            masterDataBudgets = budgetConfig.getMasterDataBudgetsOfUser(user, "costcenter");
+            putMasterDataBudgets("cost-center", user, masterDataBudgets);
 
             // Upload cost center node budgets
-            masterDataBudgets = config.getMasterDataBudgetsOfUser(user, "costcenternode");
-            putMasterDataBudgets("costcenternode", user, masterDataBudgets, csrfToken);
+            masterDataBudgets = budgetConfig.getMasterDataBudgetsOfUser(user, "costcenternode");
+            putMasterDataBudgets("costcenternode", user, masterDataBudgets);
 
             // Upload internal order budgets
-            masterDataBudgets = config.getMasterDataBudgetsOfUser(user, "internalorder");
-            putMasterDataBudgets("internal-order", user, masterDataBudgets, csrfToken);
+            masterDataBudgets = budgetConfig.getMasterDataBudgetsOfUser(user, "internalorder");
+            putMasterDataBudgets("internal-order", user, masterDataBudgets);
         }
     }
 
     private void fillTagIdMaps()
         throws URISyntaxException, IOException, ParseException
     {
-        URIBuilder uriBuilder = new URIBuilder(this.config.getOutput() + "/rest/tagging/dimension");
-        Response response = withOptionalProxy(this.config.getProxy(), Request.Get(uriBuilder.build())).execute();
+        URIBuilder uriBuilder = new URIBuilder(this.hcpConfig.getHcpUrl() + "/rest/tagging/dimension");
+        Response response = this.hcpConfig.withOptionalProxy(Request.Get(uriBuilder.build())).execute();
 
         // Parse JSON
         String responseAsString = response.returnContent().toString();
@@ -97,7 +99,7 @@ public class BudgetHcpOutput
         JSONParser parser = new JSONParser();
         JSONObject propertyMap = (JSONObject) parser.parse(responseAsString);
 
-        for( JSONObject jsonObject : (Iterable<JSONObject>) (propertyMap.get("dimensions")) ) {
+        for( JSONObject jsonObject : (Iterable<JSONObject>) propertyMap.get("dimensions") ) {
             long tagGroupId = (long) jsonObject.get("id");
             String tagGroupName = (String) jsonObject.get("name");
             this.tagGroupIds.put(tagGroupName, tagGroupId);
@@ -110,10 +112,8 @@ public class BudgetHcpOutput
         }
     }
 
-    private void putTagBudgets( String tagGroupName, String user, Map<String, List<BudgetEntry>> entries,
-        String csrfToken )
-        throws URISyntaxException, IOException
-    {
+    private void putTagBudgets( String tagGroupName, String user, Map<String, List<BudgetEntry>> entries )
+            throws URISyntaxException, IOException, RoleNotFoundException {
         if( entries.isEmpty() ) {
             logger.debug("Nothing to to here ...");
             return;
@@ -133,7 +133,7 @@ public class BudgetHcpOutput
             for( BudgetEntry entry : entries.get(tagName) ) {
                 JsonObject budget = new JsonObject();
                 budget.addProperty("id", tagId);
-                budget.addProperty("name", tagName);
+                //budget.addProperty("name", tagName);
                 budget.addProperty("amount", entry.amount);
                 budget.addProperty("currency", entry.currency);
                 budget.addProperty("year", entry.year);
@@ -145,7 +145,6 @@ public class BudgetHcpOutput
             return;
         }
         payload.add("budgets", budgets);
-        logger.debug("Got payload: " + payload.toString());
 
         if( !this.tagGroupIds.containsKey(tagGroupName) ) {
             logger.debug("Key " + tagGroupName + " does not exist in tag groups");
@@ -153,31 +152,32 @@ public class BudgetHcpOutput
         }
 
         long tagGroupId = this.tagGroupIds.get(tagGroupName);
-        URIBuilder uriBuilder = new URIBuilder(this.config.getOutput() + "/rest/budget/dimension/" + tagGroupId);
+        URIBuilder uriBuilder = new URIBuilder(this.hcpConfig.getHcpUrl() + "/rest/budget/dimension/" + tagGroupId);
         Request request = Request.Put(uriBuilder.build())
-            .addHeader("x-csrf-token", csrfToken)
+            .addHeader("x-csrf-token", this.hcpConfig.getCsrfToken())
             .bodyString(payload.toString(), ContentType.APPLICATION_JSON);
-        HttpResponse response = withOptionalProxy(this.config.getProxy(), request).execute().returnResponse();
+        HttpResponse response = this.hcpConfig.withOptionalProxy(request).execute().returnResponse();
 
         int statusCode = response.getStatusLine().getStatusCode();
         if( statusCode == 200 ) {
             logger.info(String.format("Successfully uploaded %s tag budgets for user %s",
                 entries.size(),
                 user));
+            logger.debug("URL was: " + uriBuilder.build());
+            logger.debug("Payload was: " + payload.toString());
         } else {
             logger.error(String.format("Got http code %s while uploading %s tag budgets for user %s",
                 statusCode,
                 entries.size(),
                 user));
             logger.error("URL was: " + uriBuilder.build());
+            logger.error("Payload was: " + payload.toString());
             logger.error("Error is: " + getBodyFromResponse(response));
         }
     }
 
-    private void putMasterDataBudgets( String endpoint, String user, Map<String, List<BudgetEntry>> entries,
-        String csrfToken )
-        throws URISyntaxException, IOException
-    {
+    private void putMasterDataBudgets( String endpoint, String user, Map<String, List<BudgetEntry>> entries )
+            throws URISyntaxException, IOException, RoleNotFoundException {
         if( entries.isEmpty() ) {
             logger.debug("Nothing to do for endpoint " + endpoint + " ...");
             return;
@@ -198,17 +198,22 @@ public class BudgetHcpOutput
         }
         payload.add("budgets", budgets);
 
-        URIBuilder uriBuilder = new URIBuilder(this.config.getOutput() + "/rest/budget/" + endpoint);
+        URIBuilder uriBuilder = new URIBuilder(this.hcpConfig.getHcpUrl() + "/rest/budget/" + endpoint);
         Request request = Request.Put(uriBuilder.build())
-            .addHeader("x-csrf-token", csrfToken)
+            .addHeader("x-csrf-token", this.hcpConfig.getCsrfToken())
             .bodyString(payload.toString(), ContentType.APPLICATION_JSON);
-        HttpResponse response = withOptionalProxy(this.config.getProxy(), request).execute().returnResponse();
+        HttpResponse response = this.hcpConfig.withOptionalProxy(request).execute().returnResponse();
 
         int statusCode = response.getStatusLine().getStatusCode();
         if( statusCode == 200 ) {
+            int count = 0;
+            for (String masterDataName: entries.keySet()) {
+                count += entries.get(masterDataName).size();
+            }
             logger.info(String.format("Successfully uploaded %s master data budgets for user %s",
-                entries.size(),
-                user));
+                count, user));
+            logger.debug("URL was: " + uriBuilder.build());
+            logger.debug("Payload was: " + payload.toString());
         } else {
             logger.error(String.format("Got http code %s while uploading %s master data budgets for user %s",
                 statusCode,
@@ -217,9 +222,6 @@ public class BudgetHcpOutput
             logger.error("URL was: " + uriBuilder.build());
             logger.error("Payload was: " + payload.toString());
             logger.error("Error is: " + getBodyFromResponse(response));
-            if (statusCode == 400) {
-                logger.error("Do the account names exist?");
-            }
         }
     }
 

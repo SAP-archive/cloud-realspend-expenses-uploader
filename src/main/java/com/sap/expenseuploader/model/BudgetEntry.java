@@ -8,7 +8,7 @@ public class BudgetEntry
     public String currency;
 
     /**
-     * the reporting period
+     * The reporting period
      */
     public long year;
 
