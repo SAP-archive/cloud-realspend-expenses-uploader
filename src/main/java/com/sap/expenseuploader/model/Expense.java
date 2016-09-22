@@ -67,6 +67,10 @@ public class Expense implements Comparable<Expense>
             System.exit(1);
         }
         this.currency = fields.get(9);
+        if( this.currency == null || this.currency.equals("") ) {
+            logger.error("Field 'Currency' is mandatory, please insert the currency for all line items.");
+            System.exit(1);
+        }
     }
 
     public int size()

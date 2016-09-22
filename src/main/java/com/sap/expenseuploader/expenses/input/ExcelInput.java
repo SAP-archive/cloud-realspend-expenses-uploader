@@ -40,13 +40,15 @@ public class ExcelInput implements ExpenseInput
         Workbook workbook = new HSSFWorkbook(inputStream);
         Sheet firstSheet = workbook.getSheetAt(0);
 
+        int cellsNumber = 0;
         for( Row nextRow : firstSheet ) {
             if( nextRow.getRowNum() == 0 ) {
+                cellsNumber = nextRow.getPhysicalNumberOfCells();
                 // Skip header
                 continue;
             }
             List<String> rowFields = new ArrayList<>();
-            for( int cn = 0; cn < nextRow.getLastCellNum(); cn++ ) {
+            for( int cn = 0; cn < cellsNumber; cn++ ) {
                 Object cellValue = getCellValue(nextRow.getCell(cn, Row.CREATE_NULL_AS_BLANK));
                 if( cellValue == null )
                     rowFields.add("");
