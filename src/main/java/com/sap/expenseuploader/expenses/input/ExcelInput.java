@@ -57,7 +57,6 @@ public class ExcelInput implements ExpenseInput
             expenses.add(expense);
         }
 
-        workbook.close();
         inputStream.close();
 
         return expenses;
