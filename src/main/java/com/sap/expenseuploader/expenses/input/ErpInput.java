@@ -9,7 +9,6 @@ import com.sap.expenseuploader.model.Expense;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -139,11 +138,6 @@ public class ErpInput implements ExpenseInput
         }
         catch( JCoException e ) {
             logger.error("There was a problem downloading data from the ERP!");
-            e.printStackTrace();
-            return null;
-        }
-        catch( ParseException e ) {
-            logger.error("There was a problem parsing a date from the ERP!");
             e.printStackTrace();
             return null;
         }

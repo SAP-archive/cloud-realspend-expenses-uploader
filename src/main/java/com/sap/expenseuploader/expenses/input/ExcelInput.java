@@ -9,33 +9,30 @@ import org.apache.poi.ss.usermodel.Workbook;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.text.ParseException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**
  * Reads expenses from an excel sheet. This enables either uploading external expenses (not
  * from the ERP system), or modifying the expenses exported as excel from the ERP.
  * Example excel sheet can be found in /test/resources
- *
+ * <p>
  * The entire first sheet of the Excel file is used as input. Command line parameters are not respected.
  */
 public class ExcelInput implements ExpenseInput
 {
-    private List<String> ALLOWED_EXPENSE_TYPES = Arrays.asList("ACTUAL");
-
     private File inputFile;
 
-    public ExcelInput(String path) {
+    public ExcelInput( String path )
+    {
         this.inputFile = new File(path);
     }
 
     @Override
     public List<Expense> getExpenses()
-            throws IOException, ParseException {
+        throws IOException
+    {
         FileInputStream inputStream = new FileInputStream(this.inputFile);
 
         List<Expense> expenses = new ArrayList<>();
@@ -49,13 +46,14 @@ public class ExcelInput implements ExpenseInput
                 continue;
             }
             List<String> rowFields = new ArrayList<>();
-            for( Cell nextCell : nextRow ) {
-                rowFields.add((String) getCellValue(nextCell));
+            for( int cn = 0; cn < nextRow.getLastCellNum(); cn++ ) {
+                Object cellValue = getCellValue(nextRow.getCell(cn, Row.CREATE_NULL_AS_BLANK));
+                if( cellValue == null )
+                    rowFields.add("");
+                else
+                    rowFields.add(String.valueOf(cellValue));
             }
             Expense expense = new Expense(rowFields);
-            if( !ALLOWED_EXPENSE_TYPES.contains(expense.getType().toUpperCase()) ) {
-                throw new ParseException("Unable to parse expense type: " + expense.getType(), -1);
-            }
             expenses.add(expense);
         }
 
@@ -70,10 +68,8 @@ public class ExcelInput implements ExpenseInput
         switch( cell.getCellType() ) {
             case Cell.CELL_TYPE_STRING:
                 return cell.getStringCellValue();
-
             case Cell.CELL_TYPE_BOOLEAN:
                 return cell.getBooleanCellValue();
-
             case Cell.CELL_TYPE_NUMERIC:
                 return cell.getNumericCellValue();
         }

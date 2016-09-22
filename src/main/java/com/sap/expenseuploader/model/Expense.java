@@ -30,30 +30,42 @@ public class Expense implements Comparable<Expense>
     private transient List<String> fields; // Transient to skip serialisation
 
     public Expense( String... fields )
-        throws ParseException
     {
         this(Arrays.asList(fields));
     }
 
     public Expense( List<String> fields )
-        throws ParseException
     {
         this.fields = fields;
-        if( fields.size() != 10 ) {
-            logger.error("Called Expense with " + fields.size() + " parameters instead of 10");
-        }
 
-        // Fill fixed fields
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-        this.date = sdf.parse(fields.get(0));
+        try {
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+            this.date = sdf.parse(fields.get(0));
+        }
+        catch( ParseException e ) {
+            logger.error(
+                "Field 'Item Date' is mandatory, please insert the date for all line items in the format yyyy-MM-dd. E.g. 2015-04-29");
+            System.exit(1);
+        }
         this.type = fields.get(1);
+        if( this.type == null || this.type.equals("") ) {
+            logger.error("Field 'Cost Type' is mandatory, please insert the type for all line items.");
+            System.exit(1);
+        }
         this.costCenter = fields.get(2);
         this.account = fields.get(3);
         this.requester = fields.get(4);
         this.internalOrder = fields.get(5);
         this.context = fields.get(6);
         this.requestID = fields.get(7);
-        this.amount = Double.parseDouble(fields.get(8));
+        try {
+            this.amount = Double.parseDouble(fields.get(8));
+        }
+        catch( NumberFormatException e ) {
+            logger.error(
+                "Line item 'Amount' field is mandatory. Please enter the amounts for all expenses as numbers. E.g. 10.54");
+            System.exit(1);
+        }
         this.currency = fields.get(9);
     }
 
