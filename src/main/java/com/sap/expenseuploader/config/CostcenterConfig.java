@@ -1,5 +1,6 @@
 package com.sap.expenseuploader.config;
 
+import com.sap.expenseuploader.Helper;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -9,7 +10,8 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.*;
 
-public class CostcenterConfig {
+public class CostcenterConfig
+{
 
     private final static String COSTCENTERS_JSON = "costcenters.json";
 
@@ -19,12 +21,14 @@ public class CostcenterConfig {
     // Map from cost centers to list of costCenterUsers
     private Map<String, List<String>> costCenterUsers = new HashMap<>();
 
-    public CostcenterConfig() throws IOException, ParseException {
+    public CostcenterConfig()
+        throws IOException, ParseException
+    {
         readCostCentersFromJson(COSTCENTERS_JSON);
     }
 
     private void readCostCentersFromJson( String path )
-            throws IOException, ParseException
+        throws IOException, ParseException
     {
         // Parse JSON
         JSONParser parser = new JSONParser();
@@ -32,7 +36,7 @@ public class CostcenterConfig {
         for( Object user : userMap.keySet() ) {
             userCostCenters.put((String) user, new ArrayList<String>());
             for( Object costCenter : (JSONArray) userMap.get(user) ) {
-                userCostCenters.get(user).add((String) costCenter);
+                userCostCenters.get(user).add(Helper.stripLeadingZeros((String) costCenter));
             }
         }
 

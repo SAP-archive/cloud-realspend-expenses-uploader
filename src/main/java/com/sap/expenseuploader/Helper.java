@@ -1,21 +1,9 @@
 package com.sap.expenseuploader;
 
-import com.sap.expenseuploader.config.HcpConfig;
 import com.sap.expenseuploader.model.Expense;
-import org.apache.commons.codec.binary.Base64;
-import org.apache.http.Header;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.fluent.Request;
-import org.apache.http.client.fluent.Response;
-import org.apache.http.client.utils.URIBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import javax.management.relation.RoleNotFoundException;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -63,5 +51,10 @@ public class Helper
                 j++;
             }
         }
+    }
+
+    public static String stripLeadingZeros( String str )
+    {
+        return str.replaceFirst("^0+(?!$)", "");
     }
 }

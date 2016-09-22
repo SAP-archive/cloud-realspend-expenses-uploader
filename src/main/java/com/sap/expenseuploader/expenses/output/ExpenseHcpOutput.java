@@ -32,7 +32,8 @@ public class ExpenseHcpOutput implements ExpenseOutput
     private HcpConfig hcpConfig;
     private CostcenterConfig costcenterConfig;
 
-    public ExpenseHcpOutput(HcpConfig hcpConfig, CostcenterConfig costcenterConfig) {
+    public ExpenseHcpOutput( HcpConfig hcpConfig, CostcenterConfig costcenterConfig )
+    {
         this.hcpConfig = hcpConfig;
         this.costcenterConfig = costcenterConfig;
     }
@@ -47,7 +48,7 @@ public class ExpenseHcpOutput implements ExpenseOutput
             String csrfToken = this.hcpConfig.getCsrfToken();
 
             // Upload
-            for (String user : this.costcenterConfig.getCostCenterUserList()) {
+            for( String user : this.costcenterConfig.getCostCenterUserList() ) {
                 List<String> costCenters = this.costcenterConfig.getCostCenters(user);
                 List<Expense> userExpenses = new ArrayList<>();
                 for( Expense expense : expenses ) {
@@ -78,16 +79,16 @@ public class ExpenseHcpOutput implements ExpenseOutput
 
         // Check response
         int statusCode = response.getStatusLine().getStatusCode();
-        if ( statusCode == 200 ) {
+        if( statusCode == 200 ) {
             // Parse JSON
             String responseAsString = getBodyFromResponse(response);
             JSONParser parser = new JSONParser();
             JSONObject propertyMap = (JSONObject) parser.parse(responseAsString);
             return (Long) propertyMap.get("count");
-        }
-        else {
+        } else {
             logger.error(String.format("Got http code %s while uploading %s expenses for user %s",
-                    statusCode, this.hcpConfig.getHcpUser()));
+                statusCode,
+                this.hcpConfig.getHcpUser()));
             logger.error("URL was: " + uriBuilder.build());
             logger.error("Error is: " + getBodyFromResponse(response));
             throw new IOException("Unable to get count of expenses");

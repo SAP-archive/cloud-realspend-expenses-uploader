@@ -145,10 +145,10 @@ public class ExpenseUploader
             logger.info("");
             List<Expense> expenses = expenseInput.getExpenses();
             if (expenses == null || expenses.size() == 0) {
-                logger.info("No expenses found!");
+                logger.info("No expenses found in the given input source!");
             }
             else {
-                logger.info("== Expenses ==");
+                logger.info("== Uploading Expenses ==");
                 for (ExpenseOutput output: expenseOutputs) {
                     output.putExpenses(expenses);
                 }
@@ -158,7 +158,7 @@ public class ExpenseUploader
         // 2: Upload budgets
         logger.info("");
         if (cmd.hasOption("b")) {
-            logger.info("== Budgets ==");
+            logger.info("== Uploading Budgets ==");
             BudgetHcpOutput budgetHcpOutput = new BudgetHcpOutput(
                 new BudgetConfig(),
                 new HcpConfig(
@@ -171,7 +171,7 @@ public class ExpenseUploader
             budgetHcpOutput.putBudgets();
         }
         else {
-            logger.info("No budgets will be uploaded!");
+            logger.info("No budgets will be uploaded! consider using the option 'budgets' if they're required");
         }
 
         logger.info("");

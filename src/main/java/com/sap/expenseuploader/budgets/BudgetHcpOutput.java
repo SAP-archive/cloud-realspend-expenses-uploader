@@ -123,6 +123,7 @@ public class BudgetHcpOutput
         payload.addProperty("user", user);
         JsonArray budgets = new JsonArray();
         for( String tagName : entries.keySet() ) {
+            // TODO create the missing tags in the API
             if (!this.tagNameIds.containsKey(tagGroupName)) {
                 continue;
             }

@@ -2,16 +2,14 @@ package com.sap.expenseuploader;
 
 import com.sap.conn.jco.JCoDestinationManager;
 import com.sap.conn.jco.JCoException;
-import com.sap.expenseuploader.config.BudgetConfig;
-import com.sap.expenseuploader.config.ExpenseInputConfig;
 import com.sap.expenseuploader.config.CostcenterConfig;
+import com.sap.expenseuploader.config.ExpenseInputConfig;
 import com.sap.expenseuploader.expenses.input.ExcelInput;
 import com.sap.expenseuploader.expenses.output.ExcelOutput;
 import com.sap.expenseuploader.model.Expense;
 import org.junit.Test;
 
 import java.io.File;
-import java.io.IOException;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -97,20 +95,4 @@ public class ExpenseUploaderTest
         assertEquals(expectedExpenses, Helper.getExpensesToAdd(sourceExpenses, targetExpenses));
     }
 
-    @Test
-    public void testCostcenterConfig()
-        throws IOException, ParseException, org.json.simple.parser.ParseException
-    {
-        CostcenterConfig config = new CostcenterConfig();
-        assertEquals("[0001, 0002, 0019, tbtest, testy]", config.getCostCenterList().toString());
-        assertEquals("[alex, bob, conan]", config.getCostCenterUserList().toString());
-    }
-
-    @Test
-    public void testBudgetConfig()
-        throws IOException, org.json.simple.parser.ParseException
-    {
-        BudgetConfig config = new BudgetConfig();
-        assertEquals("{}", config.getTagBudgetsOfUser("alex").toString());
-    }
 }

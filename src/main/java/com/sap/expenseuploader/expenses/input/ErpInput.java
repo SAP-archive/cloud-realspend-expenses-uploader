@@ -1,6 +1,7 @@
 package com.sap.expenseuploader.expenses.input;
 
 import com.sap.conn.jco.*;
+import com.sap.expenseuploader.Helper;
 import com.sap.expenseuploader.config.CostcenterConfig;
 import com.sap.expenseuploader.config.ExpenseInputConfig;
 import com.sap.expenseuploader.model.ControllingDocumentData;
@@ -31,14 +32,10 @@ public class ErpInput implements ExpenseInput
     ExpenseInputConfig expenseInputConfig;
     CostcenterConfig costcenterConfig;
 
-    public ErpInput(ExpenseInputConfig expenseInputConfig, CostcenterConfig costcenterConfig) {
+    public ErpInput( ExpenseInputConfig expenseInputConfig, CostcenterConfig costcenterConfig )
+    {
         this.expenseInputConfig = expenseInputConfig;
         this.costcenterConfig = costcenterConfig;
-    }
-
-    private static String stripLeadingZeros( String str )
-    {
-        return str.replaceFirst("^0+(?!$)", "");
     }
 
     /**
@@ -121,18 +118,17 @@ public class ErpInput implements ExpenseInput
 
                 String documentKey = lineItems.getString("DOC_NO");
                 if( !headerDocumentsMap.containsKey(documentKey) ) {
-                    logger.info(
-                        "Key " + documentKey + " not found in header documents table, skipping line item ...");
+                    logger.info("Key " + documentKey + " not found in header documents table, skipping line item ...");
                     lineItems.nextRow();
                     continue;
                 }
 
                 Expense row = new Expense(headerDocumentsMap.get(documentKey).getDocumentDate(),
                     "ACTUAL",
-                    stripLeadingZeros(lineItems.getString("COSTCENTER")),
-                    stripLeadingZeros(lineItems.getString("COST_ELEM")),
-                    stripLeadingZeros(lineItems.getString("PERSON_NO")),
-                    stripLeadingZeros(lineItems.getString("ORDERID")),
+                    Helper.stripLeadingZeros(lineItems.getString("COSTCENTER")),
+                    Helper.stripLeadingZeros(lineItems.getString("COST_ELEM")),
+                    Helper.stripLeadingZeros(lineItems.getString("PERSON_NO")),
+                    Helper.stripLeadingZeros(lineItems.getString("ORDERID")),
                     lineItems.getString("SEG_TEXT"),
                     "",
                     lineItems.getString("VALUE_COCUR"),
