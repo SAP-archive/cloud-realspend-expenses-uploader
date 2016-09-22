@@ -40,11 +40,19 @@ public class Expense implements Comparable<Expense>
 
         try {
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+            sdf.setLenient(false);
             this.date = sdf.parse(fields.get(0));
         }
         catch( ParseException e ) {
-            logger.error(
-                "Field 'Item Date' is mandatory, please insert the date for all line items in the format yyyy-MM-dd. E.g. 2015-04-29");
+
+            if( fields.get(0) == null || fields.get(0).equals("") ) {
+                logger.error(
+                    "Field 'Item Date' is mandatory, please insert the date for all line items in the format yyyy-MM-dd. E.g. 2015-04-29");
+            } else {
+                logger.error(String.format(
+                    "The inserted date %s is unparseable. Please enter a valid date in the correct date format yyyy-MM-dd. E.g. 2015-04-29",
+                    fields.get(0)));
+            }
             System.exit(1);
         }
         this.type = fields.get(1);
