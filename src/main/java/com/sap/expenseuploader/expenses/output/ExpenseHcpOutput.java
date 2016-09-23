@@ -1,9 +1,10 @@
 package com.sap.expenseuploader.expenses.output;
 
-import com.google.gson.*;
-import com.sap.expenseuploader.config.CostcenterConfig;
-import com.sap.expenseuploader.config.HcpConfig;
-import com.sap.expenseuploader.model.Expense;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.client.utils.URIBuilder;
@@ -18,6 +19,10 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
+
+import com.sap.expenseuploader.config.CostcenterConfig;
+import com.sap.expenseuploader.config.HcpConfig;
+import com.sap.expenseuploader.model.Expense;
 
 import static com.sap.expenseuploader.config.HcpConfig.getBodyFromResponse;
 
@@ -109,7 +114,7 @@ public class ExpenseHcpOutput implements ExpenseOutput
         JsonObject payload = new JsonObject();
         payload.add("expenses", expensesAsJson);
         payload.addProperty("user", user);
-        logger.debug(payload.toString());
+        logger.debug(new GsonBuilder().setPrettyPrinting().create().toJson(payload));
 
         // TODO delta merge: Compare expenses with what's already there
         // Blocked until we have on-behalf lookup
@@ -120,6 +125,9 @@ public class ExpenseHcpOutput implements ExpenseOutput
         Request request = Request.Post(uriBuilder.build())
             .addHeader("x-csrf-token", csrfToken)
             .bodyString(payload.toString(), ContentType.APPLICATION_JSON);
+
+        logger.info(String.format("Posting %s expenses for user %s", expenses.size(), user));
+
         HttpResponse response = this.hcpConfig.withOptionalProxy(request).execute().returnResponse();
 
         // Check response
