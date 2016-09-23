@@ -6,18 +6,17 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.client.fluent.Response;
 import org.apache.http.client.utils.URIBuilder;
+import org.apache.http.util.EntityUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import javax.management.relation.RoleNotFoundException;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URISyntaxException;
 
 public class HcpConfig {
 
-    private final Logger logger = LogManager.getLogger(this.getClass());
+    private static final Logger logger = LogManager.getLogger(HcpConfig.class);
 
     // Command line parameters
     private String hcpUrl;
@@ -93,6 +92,7 @@ public class HcpConfig {
                     Request.Get(uriBuilder.build())
                             .addHeader("Authorization", "Basic " + buildAuthString())
                             .addHeader("x-csrf-token", "fetch")).execute();
+            // FIXME: Show more info if request fails (HTTP status line + body)
             Header responseCsrfHeader = response.returnResponse().getFirstHeader("x-csrf-token");
             if( responseCsrfHeader == null ) {
                 throw new RoleNotFoundException("Provided username: \'" + getHcpUser()
@@ -115,19 +115,6 @@ public class HcpConfig {
     }
 
     public static String getBodyFromResponse(HttpResponse r) throws IOException {
-        InputStream in = r.getEntity().getContent();
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        byte[] buf = new byte[8192];
-        while (true) {
-            int nread = in.read(buf, 0, buf.length);
-            if (nread <= 0) {
-                break;
-            }
-            baos.write(buf, 0, nread);
-        }
-        in.close();
-        baos.close();
-        byte[] bytes = baos.toByteArray();
-        return new String(bytes);
+        return EntityUtils.toString(r.getEntity());
     }
 }
