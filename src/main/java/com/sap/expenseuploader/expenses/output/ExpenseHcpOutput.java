@@ -133,6 +133,7 @@ public class ExpenseHcpOutput implements ExpenseOutput
                 user));
             logger.error("URL was: " + uriBuilder.build());
             logger.error("Error is: " + getBodyFromResponse(response));
+            System.exit(1);
         }
     }
 }
