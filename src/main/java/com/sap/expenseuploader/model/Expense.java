@@ -46,7 +46,8 @@ public class Expense implements Comparable<Expense>
         catch( ParseException e ) {
 
             if( fields.get(0) == null || fields.get(0).equals("") ) {
-                throw new RuntimeException("Field 'Item Date' is mandatory, please insert the date for all line items in the format yyyy-MM-dd. E.g. 2015-04-29");
+                throw new RuntimeException(
+                    "Field 'Item Date' is mandatory, please insert the date for all line items in the format yyyy-MM-dd. E.g. 2015-04-29");
             } else {
                 throw new RuntimeException(String.format(
                     "The inserted date %s is unparseable. Please enter a valid date in the correct date format yyyy-MM-dd. E.g. 2015-04-29",

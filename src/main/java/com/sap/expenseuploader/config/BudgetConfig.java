@@ -10,7 +10,8 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.*;
 
-public class BudgetConfig {
+public class BudgetConfig
+{
 
     private final static String BUDGETS_JSON = "budgets.json";
 
@@ -22,12 +23,14 @@ public class BudgetConfig {
     // user -> master data type -> master data name -> entries
     private final Map<String, Map<String, Map<String, List<BudgetEntry>>>> userMasterDataBudgets = new HashMap<>();
 
-    public BudgetConfig() throws IOException, ParseException {
+    public BudgetConfig()
+        throws IOException, ParseException
+    {
         this.readBudgetsFromJson(BUDGETS_JSON);
     }
 
     private void readBudgetsFromJson( String path )
-            throws IOException, ParseException
+        throws IOException, ParseException
     {
         JSONParser parser = new JSONParser();
         JSONObject userMap = (JSONObject) parser.parse(new FileReader(path));
