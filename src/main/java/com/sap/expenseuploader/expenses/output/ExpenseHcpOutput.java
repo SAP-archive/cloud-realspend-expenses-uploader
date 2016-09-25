@@ -1,9 +1,10 @@
 package com.sap.expenseuploader.expenses.output;
 
-import com.google.gson.*;
-import com.sap.expenseuploader.config.CostcenterConfig;
-import com.sap.expenseuploader.config.HcpConfig;
-import com.sap.expenseuploader.model.Expense;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.client.utils.URIBuilder;
@@ -18,10 +19,18 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.URISyntaxException;
-import java.nio.file.*;
+import java.nio.file.FileVisitResult;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.List;
+
+import com.sap.expenseuploader.config.CostcenterConfig;
+import com.sap.expenseuploader.config.HcpConfig;
+import com.sap.expenseuploader.model.Expense;
 
 import static com.sap.expenseuploader.config.HcpConfig.getBodyFromResponse;
 
@@ -79,26 +88,28 @@ public class ExpenseHcpOutput implements ExpenseOutput
     private void deleteRequestFolder()
     {
         try {
-            logger.info("Deleting old request folder");
-            Files.walkFileTree(REQ_DUMP_FOLDER, new SimpleFileVisitor<Path>()
-            {
-                @Override
-                public FileVisitResult visitFile( Path file, BasicFileAttributes attrs )
-                    throws IOException
+            if( Files.exists(REQ_DUMP_FOLDER) ) {
+                logger.info("Deleting old request folder");
+                Files.walkFileTree(REQ_DUMP_FOLDER, new SimpleFileVisitor<Path>()
                 {
-                    Files.delete(file);
-                    return FileVisitResult.CONTINUE;
-                }
+                    @Override
+                    public FileVisitResult visitFile( Path file, BasicFileAttributes attrs )
+                        throws IOException
+                    {
+                        Files.delete(file);
+                        return FileVisitResult.CONTINUE;
+                    }
 
-                @Override
-                public FileVisitResult postVisitDirectory( Path dir, IOException exc )
-                    throws IOException
-                {
-                    Files.delete(dir);
-                    return FileVisitResult.CONTINUE;
-                }
+                    @Override
+                    public FileVisitResult postVisitDirectory( Path dir, IOException exc )
+                        throws IOException
+                    {
+                        Files.delete(dir);
+                        return FileVisitResult.CONTINUE;
+                    }
 
-            });
+                });
+            }
         }
         catch( Exception e ) {
             logger.error("Failed to delete " + REQ_DUMP_FOLDER, e);
@@ -124,8 +135,8 @@ public class ExpenseHcpOutput implements ExpenseOutput
             return (Long) propertyMap.get("count");
         } else {
             logger.error(String.format("Got http code %s while uploading %s expenses for user %s",
-                statusCode,
-                this.hcpConfig.getHcpUser()));
+                    statusCode,
+                    this.hcpConfig.getHcpUser()));
             logger.error("URL was: " + uriBuilder.build());
             logger.error("Error is: " + getBodyFromResponse(response));
             throw new IOException("Unable to get count of expenses");
@@ -168,14 +179,14 @@ public class ExpenseHcpOutput implements ExpenseOutput
         int statusCode = response.getStatusLine().getStatusCode();
         if( statusCode == 200 ) {
             logger.info(String.format("Successfully uploaded %s expenses for user %s (took %s sec)",
-                expenses.size(),
-                user,
-                duration / 1000));
+                    expenses.size(),
+                    user,
+                    duration / 1000));
         } else {
             logger.error(String.format("Got http code %s while uploading %s expenses for user %s",
-                statusCode,
-                expenses.size(),
-                user));
+                    statusCode,
+                    expenses.size(),
+                    user));
             logger.error("URL was: " + uriBuilder.build());
             logger.error("Error is: " + getBodyFromResponse(response));
             System.exit(1);
