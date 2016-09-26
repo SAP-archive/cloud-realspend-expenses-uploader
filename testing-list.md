@@ -17,8 +17,10 @@ EXPENSES:
 - test whether BAPI import and export to HCP via tool works with large data and invalid data
 
 - ensure to refetch CSRF token
+    * it's now feteched for each post/put request
 
 - TODO get IOO user that is allowed to call the BAPI
+    * done by Sander
 
 - test missing mandatory properties of line items in expense import (E.g. missing date) -> error code?
 	* If expenses from ERP, this will not happen. E.g. the date, expense type and amount are filled automatically.
