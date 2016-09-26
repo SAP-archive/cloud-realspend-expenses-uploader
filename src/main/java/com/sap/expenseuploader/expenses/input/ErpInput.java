@@ -2,7 +2,7 @@ package com.sap.expenseuploader.expenses.input;
 
 import com.sap.conn.jco.*;
 import com.sap.expenseuploader.Helper;
-import com.sap.expenseuploader.config.CostcenterConfig;
+import com.sap.expenseuploader.config.costcenter.CostCenterConfig;
 import com.sap.expenseuploader.config.ExpenseInputConfig;
 import com.sap.expenseuploader.model.ControllingDocumentData;
 import com.sap.expenseuploader.model.Expense;
@@ -29,12 +29,12 @@ public class ErpInput implements ExpenseInput
     private final Logger logger = LogManager.getLogger(this.getClass());
 
     ExpenseInputConfig expenseInputConfig;
-    CostcenterConfig costcenterConfig;
+    CostCenterConfig costCenterConfig;
 
-    public ErpInput( ExpenseInputConfig expenseInputConfig, CostcenterConfig costcenterConfig )
+    public ErpInput( ExpenseInputConfig expenseInputConfig, CostCenterConfig costCenterConfig )
     {
         this.expenseInputConfig = expenseInputConfig;
-        this.costcenterConfig = costcenterConfig;
+        this.costCenterConfig = costCenterConfig;
     }
 
     /**
@@ -76,7 +76,7 @@ public class ErpInput implements ExpenseInput
             table.setValue("HIGH", expenseInputConfig.getToTime());
 
             // Add all cost centers to the query
-            for( String costCenter : costcenterConfig.getCostCenterList() ) {
+            for( String costCenter : costCenterConfig.getCostCenterList() ) {
                 table.appendRow();
                 table.setValue("FIELD", "KOSTL");
                 table.setValue("SIGN", "I");

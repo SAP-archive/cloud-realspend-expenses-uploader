@@ -3,11 +3,11 @@ package com.sap.expenseuploader.expenses.output;
 import com.sap.expenseuploader.model.Expense;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -39,7 +39,7 @@ public class ExcelOutput implements ExpenseOutput
         logger.info("Writing expenses to excel file " + this.outputFile.getAbsolutePath());
 
         int rowCount = 0;
-        try( final Workbook wb = new HSSFWorkbook() ) {
+        try( final Workbook wb = new XSSFWorkbook() ) {
             FileOutputStream fileOut = new FileOutputStream(this.outputFile);
             Sheet sheet = wb.createSheet("Sheet");
 
@@ -79,7 +79,6 @@ public class ExcelOutput implements ExpenseOutput
         catch( IOException e ) {
             logger.error("Error writing to file: " + this.outputFile.getAbsolutePath());
             e.printStackTrace();
-            System.exit(1);
         }
         logger.info("Wrote " + rowCount + " expenses into XLS file " + this.outputFile.getAbsolutePath());
     }

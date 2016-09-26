@@ -16,7 +16,9 @@ public class CliOutput implements ExpenseOutput
 {
     private final Logger logger = LogManager.getLogger(this.getClass());
 
-    public CliOutput() {}
+    public CliOutput()
+    {
+    }
 
     @Override
     public void putExpenses( List<Expense> expenses )
