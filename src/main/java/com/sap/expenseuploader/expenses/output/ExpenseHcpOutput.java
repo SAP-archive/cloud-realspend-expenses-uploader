@@ -1,36 +1,26 @@
 package com.sap.expenseuploader.expenses.output;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
+import com.google.gson.*;
+import com.sap.expenseuploader.config.CostcenterConfig;
+import com.sap.expenseuploader.config.HcpConfig;
+import com.sap.expenseuploader.model.Expense;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.entity.ContentType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
 
+import javax.management.relation.RoleNotFoundException;
 import java.io.File;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.URISyntaxException;
-import java.nio.file.FileVisitResult;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.SimpleFileVisitor;
+import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.List;
-
-import com.sap.expenseuploader.config.CostcenterConfig;
-import com.sap.expenseuploader.config.HcpConfig;
-import com.sap.expenseuploader.model.Expense;
 
 import static com.sap.expenseuploader.config.HcpConfig.getBodyFromResponse;
 
@@ -43,6 +33,7 @@ public class ExpenseHcpOutput implements ExpenseOutput
     private final Logger logger = LogManager.getLogger(this.getClass());
 
     public static final Path REQ_DUMP_FOLDER = Paths.get("requests");
+    public static final int MAX_BATCH_SIZE = 1000;
 
     private HcpConfig hcpConfig;
     private CostcenterConfig costcenterConfig;
@@ -58,31 +49,121 @@ public class ExpenseHcpOutput implements ExpenseOutput
     {
         logger.info("Writing expenses to HCP at " + this.hcpConfig.getHcpUrl());
 
-        deleteRequestFolder();
-
         try {
-            // Fetch CSRF token and authenticate
-            String csrfToken = this.hcpConfig.getCsrfToken();
+            // in case the resume function was performed then we don't upload anything new
+            boolean uploadNormally = checkRequestFolderForResume(this.hcpConfig.isResumeSet());
 
-            // Upload
-            for( String user : this.costcenterConfig.getCostCenterUserList() ) {
-                List<String> costCenters = this.costcenterConfig.getCostCenters(user);
-                List<Expense> userExpenses = new ArrayList<>();
-                for( Expense expense : expenses ) {
-                    if( expense.isInCostCenter(costCenters) ) {
-                        userExpenses.add(expense);
+            if( uploadNormally ) {
+
+                // Fetch CSRF token and authenticate
+                String csrfToken = this.hcpConfig.getCsrfToken();
+
+                // used to count batches
+                long batchID = 0;
+
+                // Upload
+                for( String user : this.costcenterConfig.getCostCenterUserList() ) {
+                    List<String> costCenters = this.costcenterConfig.getCostCenters(user);
+                    List<Expense> userExpenses = new ArrayList<>();
+                    for( Expense expense : expenses ) {
+                        if( expense.isInCostCenter(costCenters) ) {
+                            userExpenses.add(expense);
+                        }
+                    }
+                    if( userExpenses.isEmpty() ) {
+                        logger.info("No expenses to put for user " + user);
+                        continue;
+                    }
+
+                    // split userExpenses into batches if needed
+                    if( userExpenses.size() > MAX_BATCH_SIZE ) {
+                        int batchCounter = 1;
+                        while( batchCounter * MAX_BATCH_SIZE < userExpenses.size() ) {
+                            int fromIndex = (batchCounter - 1) * MAX_BATCH_SIZE;
+                            int toIndex = Math.max(batchCounter * MAX_BATCH_SIZE, userExpenses.size());
+                            uploadBatchExpenses(userExpenses.subList(fromIndex, toIndex),
+                                user,
+                                this.hcpConfig.getCsrfToken(),
+                                ++batchID);
+                            batchCounter++;
+                        }
+                    } else {
+                        uploadBatchExpenses(userExpenses, user, csrfToken, ++batchID);
                     }
                 }
-                if( userExpenses.isEmpty() ) {
-                    logger.info("No expenses to put for user " + user);
-                    continue;
-                }
-                uploadExpenses(userExpenses, user, csrfToken);
             }
         }
         catch( Exception e ) {
             throw new RuntimeException("Failed to post expenses", e);
         }
+    }
+
+    /**
+     * checks the request folder if it contains any failed requests
+     *
+     * @param resumeFlagSet the value of resume flag (whether it's set or not)
+     * @return returns true if there's no resume required, and false otherwise
+     * @throws RoleNotFoundException
+     * @throws IOException
+     * @throws URISyntaxException
+     */
+    private boolean checkRequestFolderForResume( boolean resumeFlagSet )
+        throws RoleNotFoundException, IOException, URISyntaxException
+    {
+        if( Files.exists(REQ_DUMP_FOLDER) ) {
+            String[] failedRequestFilenames = REQ_DUMP_FOLDER.toFile().list(new FilenameFilter()
+            {
+                @Override
+                public boolean accept( File dir, String name )
+                {
+                    if( name.contains("_") && !name.toLowerCase().endsWith("_200.json") ) {
+                        return true;
+                    }
+                    return false;
+                }
+            });
+
+            if( failedRequestFilenames.length > 0 ) {
+                // this means we have failed requests from before, we should resume
+                if( resumeFlagSet ) {
+                    // resume the previous upload
+                    logger.info("Resuming the previous upload by retrying failed requests..");
+                    // TODO compare the hashcode of config. Resume if the same. Fail otherwise.
+                    for( String filename : failedRequestFilenames ) {
+                        String batchName = filename.substring(0, filename.lastIndexOf("_"));
+                        Path fullBatchFilepath = Paths.get(REQ_DUMP_FOLDER.toString(), batchName + ".json");
+                        if( Files.exists(fullBatchFilepath) ) {
+                            // Fetch CSRF token and authenticate
+                            String csrfToken = this.hcpConfig.getCsrfToken();
+                            String payloadString = new String(Files.readAllBytes(fullBatchFilepath));
+                            if( reUploadRequest(payloadString, csrfToken, batchName) ) {
+                                // deleting the file with failed response in it
+                                Files.delete(Paths.get(REQ_DUMP_FOLDER.toString(), filename));
+                                logger.info(
+                                    "Expenses stored in file " + fullBatchFilepath + " were successfully uploaded.");
+                            }
+                        }
+                    }
+
+                    return false;
+                } else {
+                    // in case resume is not set but the previous run wasn't successful. -> Force the user to use it
+                    logger.error(
+                        "There are failed requests from previous run. Either resume their upload (by setting resume flag in command line options) or delete them.");
+                    logger.error("Exiting the tool!");
+                    System.exit(1);
+                }
+            } else {
+                // in case resume function is set in the cmd options, but it's not required
+                if( resumeFlagSet ) {
+                    logger.info("The previous expense uploading run was successful, no resume is required.");
+                }
+
+                // no failed requests in the previous run
+                deleteRequestFolder();
+            }
+        }
+        return true;
     }
 
     private void deleteRequestFolder()
@@ -116,34 +197,7 @@ public class ExpenseHcpOutput implements ExpenseOutput
         }
     }
 
-    private long getExpenseCount()
-        throws URISyntaxException, IOException, ParseException
-    {
-        // TODO this does not show the expenses of other users, so on-behalf postings can not be checked.
-
-        URIBuilder uriBuilder = new URIBuilder(this.hcpConfig.getHcpUrl() + "/rest/expense/count");
-        Request request = Request.Get(uriBuilder.build());
-        HttpResponse response = this.hcpConfig.withOptionalProxy(request).execute().returnResponse();
-
-        // Check response
-        int statusCode = response.getStatusLine().getStatusCode();
-        if( statusCode == 200 ) {
-            // Parse JSON
-            String responseAsString = getBodyFromResponse(response);
-            JSONParser parser = new JSONParser();
-            JSONObject propertyMap = (JSONObject) parser.parse(responseAsString);
-            return (Long) propertyMap.get("count");
-        } else {
-            logger.error(String.format("Got http code %s while uploading %s expenses for user %s",
-                    statusCode,
-                    this.hcpConfig.getHcpUser()));
-            logger.error("URL was: " + uriBuilder.build());
-            logger.error("Error is: " + getBodyFromResponse(response));
-            throw new IOException("Unable to get count of expenses");
-        }
-    }
-
-    private void uploadExpenses( List<Expense> expenses, String user, String csrfToken )
+    private void uploadBatchExpenses( List<Expense> expenses, String user, String csrfToken, long batchID )
         throws URISyntaxException, IOException
     {
         // Create JSON payload
@@ -157,11 +211,9 @@ public class ExpenseHcpOutput implements ExpenseOutput
         JsonObject payload = new JsonObject();
         payload.add("expenses", expensesAsJson);
         payload.addProperty("user", user);
-        dumpRequest(user, new GsonBuilder().setPrettyPrinting().create().toJson(payload));
 
-        // TODO delta merge: Compare expenses with what's already there
-        // Blocked until we have on-behalf lookup
-        // The Helper class already has a method to compare new and existing expenses
+        // storing the requests as json
+        dumpRequest("batch" + batchID, new GsonBuilder().setPrettyPrinting().create().toJson(payload));
 
         // Upload
         URIBuilder uriBuilder = new URIBuilder(this.hcpConfig.getHcpUrl() + "/rest/expense");
@@ -175,22 +227,55 @@ public class ExpenseHcpOutput implements ExpenseOutput
         HttpResponse response = this.hcpConfig.withOptionalProxy(request).execute().returnResponse();
         final long duration = System.currentTimeMillis() - start;
 
+        dumpResponse("batch" + batchID, response);
+
         // Check response
         int statusCode = response.getStatusLine().getStatusCode();
         if( statusCode == 200 ) {
             logger.info(String.format("Successfully uploaded %s expenses for user %s (took %s sec)",
-                    expenses.size(),
-                    user,
-                    duration / 1000));
+                expenses.size(),
+                user,
+                duration / 1000));
         } else {
             logger.error(String.format("Got http code %s while uploading %s expenses for user %s",
-                    statusCode,
-                    expenses.size(),
-                    user));
+                statusCode,
+                expenses.size(),
+                user));
             logger.error("URL was: " + uriBuilder.build());
             logger.error("Error is: " + getBodyFromResponse(response));
-            System.exit(1);
         }
+    }
+
+    private boolean reUploadRequest( String payloadString, String csrfToken, String batchName )
+        throws URISyntaxException, IOException
+    {
+        // Upload
+        logger.info("Re-uploading the request stored in file " + batchName + ".json");
+        URIBuilder uriBuilder = new URIBuilder(this.hcpConfig.getHcpUrl() + "/rest/expense");
+        Request request = Request.Post(uriBuilder.build())
+            .addHeader("x-csrf-token", csrfToken)
+            .bodyString(payloadString, ContentType.APPLICATION_JSON);
+        HttpResponse response = this.hcpConfig.withOptionalProxy(request).execute().returnResponse();
+
+        dumpResponse(batchName, response);
+
+        // Check response
+        int statusCode = response.getStatusLine().getStatusCode();
+        if( statusCode == 200 ) {
+            return true;
+        } else {
+            logger.error(String.format("Got http code %s while uploading the expenses from file %s.json",
+                statusCode,
+                batchName));
+            logger.error("URL was: " + uriBuilder.build());
+            logger.error("Error is: " + getBodyFromResponse(response));
+            logger.error(String.format(
+                "Please check the response file \"%s\", and then change the necessary field values in the corresponding payload file \"%s\".",
+                REQ_DUMP_FOLDER.toString() + "/" + batchName + "_" + statusCode + ".json",
+                REQ_DUMP_FOLDER.toString() + "/" + batchName + ".json"));
+            return false;
+        }
+
     }
 
     private void dumpRequest( final String key, final String s )
@@ -201,13 +286,29 @@ public class ExpenseHcpOutput implements ExpenseOutput
             }
         }
         catch( Exception e ) {
-            logger.error("Failed to create " + REQ_DUMP_FOLDER);
+            logger.error("Failed to create the folder " + REQ_DUMP_FOLDER);
             return;
         }
 
         final File file = new File(REQ_DUMP_FOLDER.toFile(), key + ".json");
         try( PrintWriter writer = new PrintWriter(file) ) {
             writer.write(s);
+        }
+        catch( Exception e ) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void dumpResponse( final String key, final HttpResponse response )
+    {
+        final File file =
+            new File(REQ_DUMP_FOLDER.toFile(), key + "_" + response.getStatusLine().getStatusCode() + ".json");
+        try( PrintWriter writer = new PrintWriter(file) ) {
+            String responseString = getBodyFromResponse(response);
+
+            JsonParser parser = new JsonParser();
+            JsonObject json = parser.parse(responseString).getAsJsonObject();
+            writer.write(new GsonBuilder().setPrettyPrinting().create().toJson(json));
         }
         catch( Exception e ) {
             throw new RuntimeException(e);

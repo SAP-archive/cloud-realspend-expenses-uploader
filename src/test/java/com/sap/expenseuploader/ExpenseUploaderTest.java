@@ -65,34 +65,4 @@ public class ExpenseUploaderTest
         outputFile.delete();
     }
 
-    @Test
-    public void testDeltamerge()
-        throws ParseException
-    {
-        List<Expense> sourceExpenses = new ArrayList<>();
-        sourceExpenses.add(new Expense("2015-01-01", "ACTUAL", "", "", "", "", "", "", "1", "EUR"));
-        sourceExpenses.add(new Expense("2015-01-01", "ACTUAL", "", "", "", "", "", "", "1", "EUR"));
-        sourceExpenses.add(new Expense("2015-01-01", "ACTUAL", "", "", "", "", "", "", "7", "EUR"));
-        sourceExpenses.add(new Expense("2015-01-01", "ACTUAL", "", "", "", "", "", "", "5", "EUR"));
-        sourceExpenses.add(new Expense("2015-01-01", "ACTUAL", "", "", "", "", "", "", "1", "EUR"));
-        sourceExpenses.add(new Expense("2015-01-01", "ACTUAL", "", "", "", "", "", "", "1", "EUR"));
-        sourceExpenses.add(new Expense("2015-01-01", "ACTUAL", "", "", "", "", "", "", "2", "EUR"));
-
-        List<Expense> targetExpenses = new ArrayList<>();
-        targetExpenses.add(new Expense("2015-01-01", "ACTUAL", "", "", "", "", "", "", "1", "EUR"));
-        targetExpenses.add(new Expense("2015-01-01", "ACTUAL", "", "", "", "", "", "", "1", "EUR"));
-        targetExpenses.add(new Expense("2015-01-01", "ACTUAL", "", "", "", "", "", "", "8", "EUR"));
-        targetExpenses.add(new Expense("2015-01-01", "ACTUAL", "", "", "", "", "", "", "9", "EUR"));
-        targetExpenses.add(new Expense("2015-01-01", "ACTUAL", "", "", "", "", "", "", "5", "EUR"));
-        targetExpenses.add(new Expense("2015-01-01", "ACTUAL", "", "", "", "", "", "", "5", "EUR"));
-        targetExpenses.add(new Expense("2015-01-01", "ACTUAL", "", "", "", "", "", "", "7", "EUR"));
-        targetExpenses.add(new Expense("2015-01-01", "ACTUAL", "", "", "", "", "", "", "1", "EUR"));
-
-        List<Expense> expectedExpenses = new ArrayList<>();
-        expectedExpenses.add(new Expense("2015-01-01", "ACTUAL", "", "", "", "", "", "", "1", "EUR"));
-        expectedExpenses.add(new Expense("2015-01-01", "ACTUAL", "", "", "", "", "", "", "2", "EUR"));
-
-        assertEquals(expectedExpenses, Helper.getExpensesToAdd(sourceExpenses, targetExpenses));
-    }
-
 }

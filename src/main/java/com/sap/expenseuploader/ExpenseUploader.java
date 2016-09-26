@@ -53,6 +53,7 @@ public class ExpenseUploader
         options.addOption("x", "hcp_proxy", true, "proxy server (optional), e.g. example.com:8080");
         options.addOption("h", "help", false, "print this message");
         options.addOption("b", "budgets", false, "upload budgets to HCP (optional, needs HCP URL)");
+        options.addOption("r", "resume", false, "retry uploading failed expense uploading requests from previous run");
 
         // Options for Expenses
         options.addOption("in_erp",
@@ -105,7 +106,8 @@ public class ExpenseUploader
             expenseOutputs.add(new ExpenseHcpOutput(new HcpConfig(cmd.getOptionValue("url"),
                 cmd.getOptionValue("user"),
                 cmd.getOptionValue("pass"),
-                cmd.getOptionValue("x")), new CostcenterConfig()));
+                cmd.getOptionValue("x"),
+                cmd.hasOption("r")), new CostcenterConfig()));
         }
         if( cmd.hasOption("out_xls") ) {
             expenseOutputs.add(new ExcelOutput(cmd.getOptionValue("out_xls")));
@@ -152,7 +154,8 @@ public class ExpenseUploader
                 new HcpConfig(cmd.getOptionValue("url"),
                     cmd.getOptionValue("user"),
                     cmd.getOptionValue("pass"),
-                    cmd.getOptionValue("x")));
+                    cmd.getOptionValue("x"),
+                    cmd.hasOption("r")));
             budgetHcpOutput.putBudgets();
         } else {
             logger.info("No budgets will be uploaded! consider using the option 'budgets' if they're required");

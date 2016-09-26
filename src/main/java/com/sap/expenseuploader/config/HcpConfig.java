@@ -24,16 +24,18 @@ public class HcpConfig
     private String hcpUser;
     private String hcpPass;
     private String proxy; // Can be null
+    private boolean resume;
 
     // CSRF token
     private String csrfToken;
 
-    public HcpConfig( String hcpUrl, String hcpUser, String hcpPass, String proxy )
+    public HcpConfig( String hcpUrl, String hcpUser, String hcpPass, String proxy, boolean resume )
     {
         this.hcpUrl = hcpUrl;
         this.hcpUser = hcpUser;
         this.hcpPass = hcpPass;
         this.proxy = proxy;
+        this.resume = resume;
     }
 
     public String getHcpUrl()
@@ -68,6 +70,11 @@ public class HcpConfig
             this.hcpPass = new String(System.console().readPassword("HCP Password: "));
         }
         return this.hcpPass;
+    }
+
+    public boolean isResumeSet()
+    {
+        return resume;
     }
 
     public Request withOptionalProxy( Request request )
