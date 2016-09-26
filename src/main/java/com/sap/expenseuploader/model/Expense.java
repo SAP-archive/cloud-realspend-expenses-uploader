@@ -1,6 +1,7 @@
 package com.sap.expenseuploader.model;
 
 import com.google.gson.annotations.SerializedName;
+import com.sap.expenseuploader.Helper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -64,7 +65,7 @@ public class Expense implements Comparable<Expense>
         if( this.type == null || this.type.equals("") ) {
             throw new RuntimeException("Field 'Cost Type' is mandatory, please insert the type for all line items.");
         }
-        this.costCenter = fields.get(2);
+        this.costCenter = Helper.stripLeadingZeros(fields.get(2));
         this.account = fields.get(3);
         this.requester = fields.get(4);
         this.internalOrder = fields.get(5);
