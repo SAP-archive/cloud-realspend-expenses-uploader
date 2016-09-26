@@ -17,7 +17,7 @@ EXPENSES:
 - test whether BAPI import and export to HCP via tool works with large data and invalid data
 
 - ensure to refetch CSRF token
-    * it's now feteched for each post/put request
+    * it's now fetched for each post/put request
 
 - TODO get IOO user that is allowed to call the BAPI
     * done by Sander
