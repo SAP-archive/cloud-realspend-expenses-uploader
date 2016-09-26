@@ -47,12 +47,17 @@ public class Expense implements Comparable<Expense>
         catch( ParseException e ) {
 
             if( fields.get(0) == null || fields.get(0).equals("") ) {
-                throw new RuntimeException(
-                    "Field 'Item Date' is mandatory, please insert the date for all line items in the format yyyy-MM-dd. E.g. 2015-04-29");
+                throw new RuntimeException(String.format(
+                    "Field 'Item Date' is empty, please insert the date for "
+                    + "all line items in the format yyyy-MM-dd. E.g. 2015-04-29",
+                    fields.get(0)
+                ));
             } else {
                 throw new RuntimeException(String.format(
-                    "The inserted date %s is unparseable. Please enter a valid date in the correct date format yyyy-MM-dd. E.g. 2015-04-29",
-                    fields.get(0)));
+                    "The inserted date %s is unparseable. Please enter a valid date in the correct "
+                    + "date format yyyy-MM-dd. E.g. 2015-04-29",
+                    fields.get(0)
+                ));
             }
 
         }
@@ -71,7 +76,9 @@ public class Expense implements Comparable<Expense>
         }
         catch( NumberFormatException e ) {
             throw new RuntimeException(
-                "Line item 'Amount' field is mandatory. Please enter the amounts for all expenses as numbers. E.g. 10.54");
+                "Line item 'Amount' field is mandatory. Please enter the amounts for all expenses "
+                + "as numbers. E.g. 10.54"
+            );
         }
         this.currency = fields.get(9);
         if( this.currency == null || this.currency.equals("") ) {
@@ -139,7 +146,7 @@ public class Expense implements Comparable<Expense>
         return requestID;
     }
 
-    public boolean isInCostCenter( List<String> costCenters )
+    public boolean isInCostCenter(List<String> costCenters )
     {
         for( String cc : costCenters ) {
             if( this.getCostCenter().equalsIgnoreCase(cc) ) {

@@ -2,8 +2,8 @@ package com.sap.expenseuploader;
 
 import com.sap.conn.jco.JCoDestinationManager;
 import com.sap.conn.jco.JCoException;
-import com.sap.expenseuploader.config.CostcenterConfig;
 import com.sap.expenseuploader.config.ExpenseInputConfig;
+import com.sap.expenseuploader.config.costcenter.CostCenterConfig;
 import com.sap.expenseuploader.expenses.input.ExcelInput;
 import com.sap.expenseuploader.expenses.output.ExcelOutput;
 import com.sap.expenseuploader.model.Expense;
@@ -32,7 +32,7 @@ public class ExpenseUploaderTest
         when(eInConfig.getControllingArea()).thenReturn("0001");
         when(eInConfig.getPeriod()).thenReturn("004");
 
-        CostcenterConfig eOutConfig = mock(CostcenterConfig.class);
+        CostCenterConfig eOutConfig = mock(CostCenterConfig.class);
         when(eOutConfig.getCostCenterList()).thenReturn(Arrays.asList("MARKETING", "SAP-DUMMY"));
 
         // TODO use this on an ERP test system
@@ -42,7 +42,7 @@ public class ExpenseUploaderTest
     public void testExcelInput()
     {
         try {
-            ExcelInput excelInput = new ExcelInput("src/test/resources/Input_Excel.xls");
+            ExcelInput excelInput = new ExcelInput("src/test/resources/Input_Excel.xlsx");
             List<Expense> expenses = excelInput.getExpenses();
             assertEquals(54, expenses.size());
         }
@@ -57,12 +57,11 @@ public class ExpenseUploaderTest
     {
         List<Expense> expenses = new ArrayList<>();
         expenses.add(new Expense("2000-01-01", "FOO", "cc", "acc", "pers", "ord", "con", "req", "1090.01", "cur"));
-        ExcelOutput output = new ExcelOutput("expenses.xls");
+        ExcelOutput output = new ExcelOutput("expenses.xlsx");
         output.putExpenses(expenses);
-        File outputFile = new File("expenses.xls");
+        File outputFile = new File("expenses.xlsx");
         assertTrue(outputFile.exists());
         assertNotEquals(0, outputFile.length());
         outputFile.delete();
     }
-
 }

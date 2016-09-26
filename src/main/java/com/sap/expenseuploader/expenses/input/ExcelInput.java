@@ -3,8 +3,8 @@ package com.sap.expenseuploader.expenses.input;
 import com.sap.expenseuploader.model.Expense;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -16,7 +16,7 @@ import java.util.List;
  * Reads expenses from an excel sheet. This enables either uploading external expenses (not
  * from the ERP system), or modifying the expenses exported as excel from the ERP.
  * Example excel sheet can be found in /test/resources
- * <p>
+ *
  * The entire first sheet of the Excel file is used as input. Command line parameters are not respected.
  */
 public class ExcelInput implements ExpenseInput
@@ -37,7 +37,7 @@ public class ExcelInput implements ExpenseInput
         List<Expense> expenses = new ArrayList<>();
 
         try( FileInputStream inputStream = new FileInputStream(this.inputFile) ) {
-            Workbook workbook = new HSSFWorkbook(inputStream);
+            Workbook workbook = new XSSFWorkbook(inputStream);
             Sheet firstSheet = workbook.getSheetAt(0);
 
             int cellsNumber = 0;

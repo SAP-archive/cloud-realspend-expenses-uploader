@@ -1,8 +1,8 @@
 package com.sap.expenseuploader.expenses.output;
 
 import com.google.gson.*;
-import com.sap.expenseuploader.config.CostcenterConfig;
 import com.sap.expenseuploader.config.HcpConfig;
+import com.sap.expenseuploader.config.costcenter.CostCenterConfig;
 import com.sap.expenseuploader.model.Expense;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.fluent.Request;
@@ -36,12 +36,12 @@ public class ExpenseHcpOutput implements ExpenseOutput
     public static final int MAX_BATCH_SIZE = 1000;
 
     private HcpConfig hcpConfig;
-    private CostcenterConfig costcenterConfig;
+    private CostCenterConfig costCenterConfig;
 
-    public ExpenseHcpOutput( HcpConfig hcpConfig, CostcenterConfig costcenterConfig )
+    public ExpenseHcpOutput( HcpConfig hcpConfig, CostCenterConfig costCenterConfig )
     {
         this.hcpConfig = hcpConfig;
-        this.costcenterConfig = costcenterConfig;
+        this.costCenterConfig = costCenterConfig;
     }
 
     @Override
@@ -50,11 +50,11 @@ public class ExpenseHcpOutput implements ExpenseOutput
         logger.info("Writing expenses to HCP at " + this.hcpConfig.getHcpUrl());
 
         try {
+
             // in case the resume function was performed then we don't upload anything new
             boolean uploadNormally = checkRequestFolderForResume(this.hcpConfig.isResumeSet());
 
             if( uploadNormally ) {
-
                 // Fetch CSRF token and authenticate
                 String csrfToken = this.hcpConfig.getCsrfToken();
 
@@ -62,8 +62,8 @@ public class ExpenseHcpOutput implements ExpenseOutput
                 long batchID = 0;
 
                 // Upload
-                for( String user : this.costcenterConfig.getCostCenterUserList() ) {
-                    List<String> costCenters = this.costcenterConfig.getCostCenters(user);
+                for( String user : this.costCenterConfig.getCostCenterUserList() ) {
+                    List<String> costCenters = this.costCenterConfig.getCostCenters(user);
                     List<Expense> userExpenses = new ArrayList<>();
                     for( Expense expense : expenses ) {
                         if( expense.isInCostCenter(costCenters) ) {
@@ -107,6 +107,7 @@ public class ExpenseHcpOutput implements ExpenseOutput
      * @throws IOException
      * @throws URISyntaxException
      */
+
     private boolean checkRequestFolderForResume( boolean resumeFlagSet )
         throws RoleNotFoundException, IOException, URISyntaxException
     {
@@ -188,7 +189,6 @@ public class ExpenseHcpOutput implements ExpenseOutput
                         Files.delete(dir);
                         return FileVisitResult.CONTINUE;
                     }
-
                 });
             }
         }
@@ -198,7 +198,7 @@ public class ExpenseHcpOutput implements ExpenseOutput
     }
 
     private void uploadBatchExpenses( List<Expense> expenses, String user, String csrfToken, long batchID )
-        throws URISyntaxException, IOException
+        throws URISyntaxException, IOException, RoleNotFoundException
     {
         // Create JSON payload
         Gson gson = new GsonBuilder().setDateFormat("yyyy-MM-dd").create();
@@ -218,7 +218,7 @@ public class ExpenseHcpOutput implements ExpenseOutput
         // Upload
         URIBuilder uriBuilder = new URIBuilder(this.hcpConfig.getHcpUrl() + "/rest/expense");
         Request request = Request.Post(uriBuilder.build())
-            .addHeader("x-csrf-token", csrfToken)
+            .addHeader("x-csrf-token", this.hcpConfig.getCsrfToken())
             .bodyString(payload.toString(), ContentType.APPLICATION_JSON);
 
         logger.info(String.format("Posting %s expenses for user %s", expenses.size(), user));

@@ -31,4 +31,22 @@ public class BudgetEntry
     {
         return String.format("[%s, %s, %s]", amount, currency, year);
     }
+
+    @Override
+    public boolean equals(Object other) {
+        if (!(other instanceof BudgetEntry)) {
+            return false;
+        }
+        BudgetEntry otherEntry = (BudgetEntry) other;
+        if (this.amount != otherEntry.amount) {
+            return false;
+        }
+        if (!this.currency.equals(otherEntry.currency)) {
+            return false;
+        }
+        if (this.year != otherEntry.year) {
+            return false;
+        }
+        return true;
+    }
 }

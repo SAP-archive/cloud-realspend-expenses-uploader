@@ -1,6 +1,8 @@
-package com.sap.expenseuploader.config;
+package com.sap.expenseuploader.config.budget;
 
 import com.sap.expenseuploader.model.BudgetEntry;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -8,30 +10,28 @@ import org.json.simple.parser.ParseException;
 
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-public class BudgetConfig
+public class JsonBudgetConfig extends BudgetConfig
 {
-
     private final static String BUDGETS_JSON = "budgets.json";
 
-    // Map from user to the budgets of tags
-    // user -> tag group -> tag name -> entries
-    private final Map<String, Map<String, Map<String, List<BudgetEntry>>>> userTagBudgets = new HashMap<>();
+    private final Logger logger = LogManager.getLogger(this.getClass());
 
-    // Map from user to the budgets of master data
-    // user -> master data type -> master data name -> entries
-    private final Map<String, Map<String, Map<String, List<BudgetEntry>>>> userMasterDataBudgets = new HashMap<>();
-
-    public BudgetConfig()
+    public JsonBudgetConfig()
         throws IOException, ParseException
     {
-        this.readBudgetsFromJson(BUDGETS_JSON);
+        this(BUDGETS_JSON);
     }
 
-    private void readBudgetsFromJson( String path )
+    public JsonBudgetConfig( String path )
         throws IOException, ParseException
     {
+        logger.debug("Reading budgets for each user from JSON");
+
         JSONParser parser = new JSONParser();
         JSONObject userMap = (JSONObject) parser.parse(new FileReader(path));
         for( Object userObject : userMap.keySet() ) {
@@ -100,49 +100,5 @@ public class BudgetConfig
                 entries.add(entry);
             }
         }
-    }
-
-    /**
-     * Returns the tags of this user
-     *
-     * @param user
-     * @return data or an empty list
-     */
-    public Map<String, Map<String, List<BudgetEntry>>> getTagBudgetsOfUser( String user )
-    {
-        if( !userTagBudgets.containsKey(user) ) {
-            // Immutable empty map
-            return Collections.emptyMap();
-        }
-        return userTagBudgets.get(user);
-    }
-
-    /**
-     * Returns the master data of this user
-     *
-     * @param user
-     * @param masterDataKey
-     * @return data or an empty list
-     */
-    public Map<String, List<BudgetEntry>> getMasterDataBudgetsOfUser( String user, String masterDataKey )
-    {
-        if( !userMasterDataBudgets.containsKey(user) ) {
-            // Immutable empty map
-            return Collections.emptyMap();
-        }
-        if( !userMasterDataBudgets.get(user).containsKey(masterDataKey) ) {
-            // Immutable empty map
-            return Collections.emptyMap();
-        }
-        return userMasterDataBudgets.get(user).get(masterDataKey);
-    }
-
-    public List<String> getBudgetUserList()
-    {
-        Set<String> users = new HashSet<>(userMasterDataBudgets.keySet());
-        users.addAll(userTagBudgets.keySet());
-        List<String> result = new ArrayList<>(users);
-        Collections.sort(result);
-        return result;
     }
 }

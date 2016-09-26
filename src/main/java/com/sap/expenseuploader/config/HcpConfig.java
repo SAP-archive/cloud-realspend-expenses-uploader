@@ -4,7 +4,6 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.fluent.Request;
-import org.apache.http.client.fluent.Response;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.util.EntityUtils;
 import org.apache.logging.log4j.LogManager;
@@ -16,7 +15,6 @@ import java.net.URISyntaxException;
 
 public class HcpConfig
 {
-
     private static final Logger logger = LogManager.getLogger(HcpConfig.class);
 
     // Command line parameters
@@ -86,7 +84,7 @@ public class HcpConfig
     }
 
     /**
-     * Fetches a CSRF token from Realspend. Returns a cached result if this already happened.
+     * Fetches a CSRF token from RealSpend and authenticates.
      *
      * @return CSRF token
      * @throws URISyntaxException
@@ -96,23 +94,27 @@ public class HcpConfig
     public String getCsrfToken()
         throws URISyntaxException, IOException, RoleNotFoundException
     {
-        // Fixme: change the logic of this function to fetch the token only when it expires
-        //if( this.csrfToken == null ) {
+        // Currently the caching is disabled, the token is refetched every time
+        return fetchCsrfToken();
+    }
+
+    private String fetchCsrfToken()
+        throws IOException, URISyntaxException, RoleNotFoundException
+    {
         URIBuilder uriBuilder = new URIBuilder(getHcpUrl() + "/rest/csrf");
-        Response response = withOptionalProxy(Request.Get(uriBuilder.build())
+        Request request = Request.Get(uriBuilder.build())
             .addHeader("Authorization", "Basic " + buildAuthString())
-            .addHeader("x-csrf-token", "fetch")).execute();
+            .addHeader("x-csrf-token", "fetch");
+        HttpResponse response = withOptionalProxy(request).execute().returnResponse();
+        Header responseCsrfHeader = response.getFirstHeader("x-csrf-token");
         // FIXME: Show more info if request fails (HTTP status line + body)
-        Header responseCsrfHeader = response.returnResponse().getFirstHeader("x-csrf-token");
         if( responseCsrfHeader == null ) {
             throw new RoleNotFoundException("Provided username: \'" + getHcpUser()
                 + "\' is not authorized to perform http requests to HCP or wrong username/password provided.");
         }
-        csrfToken = responseCsrfHeader.getValue();
-        logger.info("Fetched CSRF token " + csrfToken);
-        //}
-
-        return csrfToken;
+        String result = responseCsrfHeader.getValue();
+        logger.debug("Fetched CSRF token " + result);
+        return result;
     }
 
     public String buildAuthString()

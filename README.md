@@ -39,12 +39,9 @@ Notes
 
 Configuration files
 -------------------
-- There are two configuration files, budgets.json and costcenters.json. These are used to specify what data should be uploaded.
-- In the file costcenters.json you must specify for each user, which cost centers are relevant. Only expenses related to these will be uploaded.
-- In the file budgets.json you must specify the budgets for tags and master data. The following master data is available: account, accountnode, costcenter, costcenternode and internalorder
-- For master data you specify the key (accounts use the account number, others use the node-name) and a list of budgets
-- A budget has three attributes: amount, currency and year
-- For tags you use the key "tags", followed by a map of tag-groups, then a map of tag-names and last a list of budgets
+- The configuration is done using the Excel file "config.xlsx".
+- On the first sheet you can specify, which user will receive actuals for which cost center.
+- On the subsequent sheets you can specify budgets for master data and tags.
 
 License
 -------

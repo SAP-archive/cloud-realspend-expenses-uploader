@@ -2,6 +2,7 @@ package com.sap.expenseuploader;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.poi.ss.usermodel.Cell;
 
 /**
  * Represents a library of helper functions which can be used by other classes
