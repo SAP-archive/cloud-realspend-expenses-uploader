@@ -1,6 +1,7 @@
 package com.sap.expenseuploader;
 
 import org.apache.commons.codec.binary.Base64;
+import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.json.simple.parser.ParseException;
 import org.junit.Test;
 
@@ -14,8 +15,15 @@ public class IntegrationTest {
 
     @Test
     public void testAgainstTrialInstance()
-            throws RoleNotFoundException, ParseException, IOException, org.apache.commons.cli.ParseException,
-            URISyntaxException, java.text.ParseException {
+        throws
+        RoleNotFoundException,
+        ParseException,
+        IOException,
+        org.apache.commons.cli.ParseException,
+        URISyntaxException,
+        java.text.ParseException,
+        InvalidFormatException
+    {
 
         String[] args = {
             "--from",               "20150301",
