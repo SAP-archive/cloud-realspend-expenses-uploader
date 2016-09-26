@@ -10,7 +10,7 @@ import org.json.simple.parser.ParseException;
 import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.Calendar;
 
 public class ExpenseInputConfig
 {
@@ -23,8 +23,10 @@ public class ExpenseInputConfig
     private String toTime;
     private String period;
 
-    public ExpenseInputConfig(String systemName, String controllingArea, String fromTime, String toTime, String period)
-            throws IOException, ParseException {
+    public ExpenseInputConfig( String systemName, String controllingArea, String fromTime, String toTime,
+        String period )
+        throws IOException, ParseException
+    {
         this.systemName = systemName;
         this.controllingArea = controllingArea;
         this.fromTime = fromTime;

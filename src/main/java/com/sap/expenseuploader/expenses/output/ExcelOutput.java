@@ -79,7 +79,6 @@ public class ExcelOutput implements ExpenseOutput
         catch( IOException e ) {
             logger.error("Error writing to file: " + this.outputFile.getAbsolutePath());
             e.printStackTrace();
-            System.exit(1);
         }
         logger.info("Wrote " + rowCount + " expenses into XLS file " + this.outputFile.getAbsolutePath());
     }

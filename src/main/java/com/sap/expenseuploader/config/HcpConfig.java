@@ -13,8 +13,8 @@ import javax.management.relation.RoleNotFoundException;
 import java.io.IOException;
 import java.net.URISyntaxException;
 
-public class HcpConfig {
-
+public class HcpConfig
+{
     private static final Logger logger = LogManager.getLogger(HcpConfig.class);
 
     // Command line parameters
@@ -34,7 +34,7 @@ public class HcpConfig {
 
     public String getHcpUrl()
     {
-        if (this.hcpUrl == null || this.hcpUrl.isEmpty()) {
+        if( this.hcpUrl == null || this.hcpUrl.isEmpty() ) {
             logger.error("No HCP URL provided!");
         }
         return this.hcpUrl;
@@ -66,9 +66,9 @@ public class HcpConfig {
         return this.hcpPass;
     }
 
-    public Request withOptionalProxy(Request request)
+    public Request withOptionalProxy( Request request )
     {
-        if (this.proxy != null && !this.proxy.isEmpty()) {
+        if( this.proxy != null && !this.proxy.isEmpty() ) {
             request = request.viaProxy(this.proxy);
         }
         return request;
@@ -82,7 +82,7 @@ public class HcpConfig {
      * @throws RoleNotFoundException
      */
     public String getCsrfToken()
-            throws URISyntaxException, IOException, RoleNotFoundException
+        throws URISyntaxException, IOException, RoleNotFoundException
     {
         // Currently the caching is disabled, the token is refetched every time
         return fetchCsrfToken();
@@ -107,14 +107,12 @@ public class HcpConfig {
 
     public String buildAuthString()
     {
-        return new String(
-            Base64.encodeBase64(
-                (getHcpUser() + ":" + getHcpPass()).getBytes()
-            )
-        );
+        return new String(Base64.encodeBase64((getHcpUser() + ":" + getHcpPass()).getBytes()));
     }
 
-    public static String getBodyFromResponse(HttpResponse r) throws IOException {
+    public static String getBodyFromResponse( HttpResponse r )
+        throws IOException
+    {
         return EntityUtils.toString(r.getEntity());
     }
 }
