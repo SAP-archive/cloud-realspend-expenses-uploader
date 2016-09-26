@@ -168,9 +168,7 @@ public class ExpenseUploader
                     cmd.getOptionValue("url"),
                     cmd.getOptionValue("user"),
                     cmd.getOptionValue("pass"),
-                    cmd.getOptionValue("x")
-                )
-            );
+                    cmd.getOptionValue("x")));
             budgetHcpOutput.putBudgets();
         }
         else {
