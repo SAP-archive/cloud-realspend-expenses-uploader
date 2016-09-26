@@ -93,7 +93,7 @@ public class BudgetHcpOutput
 
             // Upload cost center node budgets
             masterDataBudgets = budgetConfig.getMasterDataBudgetsOfUser(user, "costcenternode");
-            putMasterDataBudgets("costcenternode", user, masterDataBudgets);
+            putMasterDataBudgets("cost-center/hierarchy/node", user, masterDataBudgets);
 
             // Upload internal order budgets
             masterDataBudgets = budgetConfig.getMasterDataBudgetsOfUser(user, "internalorder");
