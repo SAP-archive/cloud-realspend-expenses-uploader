@@ -106,7 +106,7 @@ public class ExpenseHcpOutput implements ExpenseOutput
         JsonObject payload = new JsonObject();
         payload.add("expenses", expensesAsJson);
         payload.addProperty("user", user);
-        logger.debug(payload.toString());
+        logger.debug(new GsonBuilder().setPrettyPrinting().create().toJson(payload));
 
         // TODO delta merge: Compare expenses with what's already there
         // Blocked until we have on-behalf lookup
@@ -117,6 +117,9 @@ public class ExpenseHcpOutput implements ExpenseOutput
         Request request = Request.Post(uriBuilder.build())
             .addHeader("x-csrf-token", this.hcpConfig.getCsrfToken())
             .bodyString(payload.toString(), ContentType.APPLICATION_JSON);
+
+        logger.info(String.format("Posting %s expenses for user %s", expenses.size(), user));
+
         HttpResponse response = this.hcpConfig.withOptionalProxy(request).execute().returnResponse();
 
         // Check response

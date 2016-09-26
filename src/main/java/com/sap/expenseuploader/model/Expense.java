@@ -12,7 +12,7 @@ import java.util.List;
 
 public class Expense implements Comparable<Expense>
 {
-    private transient final Logger logger = LogManager.getLogger(this.getClass());
+    private static transient final Logger logger = LogManager.getLogger(Expense.class);
 
     private Date date;
     private String type;
@@ -46,23 +46,23 @@ public class Expense implements Comparable<Expense>
         catch( ParseException e ) {
 
             if( fields.get(0) == null || fields.get(0).equals("") ) {
-                logger.error(
-                    "Field 'Item Date' has invalid value '%s', please insert the date for "
-                    + "all line items in the format yyyy-MM-dd. E.g. 2015-04-29"
-                );
+                throw new RuntimeException(String.format(
+                    "Field 'Item Date' is empty, please insert the date for "
+                    + "all line items in the format yyyy-MM-dd. E.g. 2015-04-29",
+                    fields.get(0)
+                ));
             } else {
-                logger.error(String.format(
+                throw new RuntimeException(String.format(
                     "The inserted date %s is unparseable. Please enter a valid date in the correct "
                     + "date format yyyy-MM-dd. E.g. 2015-04-29",
                     fields.get(0)
                 ));
             }
-            System.exit(1);
+
         }
         this.type = fields.get(1);
         if( this.type == null || this.type.equals("") ) {
-            logger.error("Field 'Cost Type' is mandatory, please insert the type for all line items.");
-            System.exit(1);
+            throw new RuntimeException("Field 'Cost Type' is mandatory, please insert the type for all line items.");
         }
         this.costCenter = fields.get(2);
         this.account = fields.get(3);
@@ -74,16 +74,14 @@ public class Expense implements Comparable<Expense>
             this.amount = Double.parseDouble(fields.get(8));
         }
         catch( NumberFormatException e ) {
-            logger.error(
+            throw new RuntimeException(
                 "Line item 'Amount' field is mandatory. Please enter the amounts for all expenses "
                 + "as numbers. E.g. 10.54"
             );
-            System.exit(1);
         }
         this.currency = fields.get(9);
         if( this.currency == null || this.currency.equals("") ) {
-            logger.error("Field 'Currency' is mandatory, please insert the currency for all line items.");
-            System.exit(1);
+            throw new RuntimeException("Field 'Currency' is mandatory, please insert the currency for all line items.");
         }
     }
 

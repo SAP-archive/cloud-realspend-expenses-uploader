@@ -58,18 +58,4 @@ public class Helper
     {
         return str.replaceFirst("^0+(?!$)", "");
     }
-
-    public static Object getCellValue( Cell cell )
-    {
-        switch( cell.getCellType() ) {
-            case Cell.CELL_TYPE_STRING:
-                return cell.getStringCellValue();
-            case Cell.CELL_TYPE_BOOLEAN:
-                return cell.getBooleanCellValue();
-            case Cell.CELL_TYPE_NUMERIC:
-                return cell.getNumericCellValue();
-        }
-
-        return null;
-    }
 }
