@@ -36,7 +36,8 @@ public class IntegrationTest {
             "--hcp_user",           "your username here",
             "--hcp_password",       new String(Base64.decodeBase64("your password in base64 here".getBytes())),
             "--hcp_proxy",          "proxy.wdf.sap.corp:8080",
-            "--budgets"
+            "--budgets",
+            "--resume"
         };
 
         ExpenseUploader.main(args);
