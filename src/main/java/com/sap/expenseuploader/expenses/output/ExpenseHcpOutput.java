@@ -1,8 +1,8 @@
 package com.sap.expenseuploader.expenses.output;
 
 import com.google.gson.*;
-import com.sap.expenseuploader.config.CostcenterConfig;
 import com.sap.expenseuploader.config.HcpConfig;
+import com.sap.expenseuploader.config.costcenter.CostCenterConfig;
 import com.sap.expenseuploader.model.Expense;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.fluent.Request;
@@ -14,6 +14,7 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
+import javax.management.relation.RoleNotFoundException;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -30,12 +31,12 @@ public class ExpenseHcpOutput implements ExpenseOutput
     private final Logger logger = LogManager.getLogger(this.getClass());
 
     private HcpConfig hcpConfig;
-    private CostcenterConfig costcenterConfig;
+    private CostCenterConfig costCenterConfig;
 
-    public ExpenseHcpOutput( HcpConfig hcpConfig, CostcenterConfig costcenterConfig )
+    public ExpenseHcpOutput( HcpConfig hcpConfig, CostCenterConfig costCenterConfig)
     {
         this.hcpConfig = hcpConfig;
-        this.costcenterConfig = costcenterConfig;
+        this.costCenterConfig = costCenterConfig;
     }
 
     @Override
@@ -44,12 +45,9 @@ public class ExpenseHcpOutput implements ExpenseOutput
         logger.info("Writing expenses to HCP at " + this.hcpConfig.getHcpUrl());
 
         try {
-            // Fetch CSRF token and authenticate
-            String csrfToken = this.hcpConfig.getCsrfToken();
-
             // Upload
-            for( String user : this.costcenterConfig.getCostCenterUserList() ) {
-                List<String> costCenters = this.costcenterConfig.getCostCenters(user);
+            for( String user : this.costCenterConfig.getCostCenterUserList() ) {
+                List<String> costCenters = this.costCenterConfig.getCostCenters(user);
                 List<Expense> userExpenses = new ArrayList<>();
                 for( Expense expense : expenses ) {
                     if( expense.isInCostCenter(costCenters) ) {
@@ -60,7 +58,7 @@ public class ExpenseHcpOutput implements ExpenseOutput
                     logger.info("No expenses to put for user " + user);
                     continue;
                 }
-                uploadExpenses(userExpenses, user, csrfToken);
+                uploadExpenses(userExpenses, user);
             }
         }
         catch( Exception e ) {
@@ -95,9 +93,8 @@ public class ExpenseHcpOutput implements ExpenseOutput
         }
     }
 
-    private void uploadExpenses( List<Expense> expenses, String user, String csrfToken )
-        throws URISyntaxException, IOException
-    {
+    private void uploadExpenses( List<Expense> expenses, String user )
+            throws URISyntaxException, IOException, RoleNotFoundException {
         // Create JSON payload
         Gson gson = new GsonBuilder().setDateFormat("yyyy-MM-dd").create();
         JsonArray expensesAsJson = (JsonArray) gson.toJsonTree(expenses);
@@ -118,7 +115,7 @@ public class ExpenseHcpOutput implements ExpenseOutput
         // Upload
         URIBuilder uriBuilder = new URIBuilder(this.hcpConfig.getHcpUrl() + "/rest/expense");
         Request request = Request.Post(uriBuilder.build())
-            .addHeader("x-csrf-token", csrfToken)
+            .addHeader("x-csrf-token", this.hcpConfig.getCsrfToken())
             .bodyString(payload.toString(), ContentType.APPLICATION_JSON);
         HttpResponse response = this.hcpConfig.withOptionalProxy(request).execute().returnResponse();
 

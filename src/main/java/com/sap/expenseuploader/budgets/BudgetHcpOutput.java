@@ -2,7 +2,7 @@ package com.sap.expenseuploader.budgets;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import com.sap.expenseuploader.config.BudgetConfig;
+import com.sap.expenseuploader.config.budget.BudgetConfig;
 import com.sap.expenseuploader.config.HcpConfig;
 import com.sap.expenseuploader.model.BudgetEntry;
 import org.apache.http.HttpResponse;

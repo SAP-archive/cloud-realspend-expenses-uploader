@@ -6,6 +6,7 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.client.fluent.Response;
 import org.apache.http.client.utils.URIBuilder;
+import org.apache.http.entity.ContentType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -23,10 +24,7 @@ public class HcpConfig {
     private String hcpUrl;
     private String hcpUser;
     private String hcpPass;
-    private String proxy; // Can be null
-
-    // CSRF token
-    private String csrfToken;
+    private String proxy; // Null if no proxy
 
     public HcpConfig(String hcpUrl, String hcpUser, String hcpPass, String proxy) {
         this.hcpUrl = hcpUrl;
@@ -78,7 +76,7 @@ public class HcpConfig {
     }
 
     /**
-     * Fetches a CSRF token from Realspend. Returns a cached result if this already happened.
+     * Fetches a CSRF token from RealSpend and authenticates.
      * @return CSRF token
      * @throws URISyntaxException
      * @throws IOException
@@ -87,22 +85,24 @@ public class HcpConfig {
     public String getCsrfToken()
             throws URISyntaxException, IOException, RoleNotFoundException
     {
-        if (this.csrfToken == null) {
-            URIBuilder uriBuilder = new URIBuilder(getHcpUrl() + "/rest/csrf");
-            Response response = withOptionalProxy(
-                    Request.Get(uriBuilder.build())
-                            .addHeader("Authorization", "Basic " + buildAuthString())
-                            .addHeader("x-csrf-token", "fetch")).execute();
-            Header responseCsrfHeader = response.returnResponse().getFirstHeader("x-csrf-token");
-            if( responseCsrfHeader == null ) {
-                throw new RoleNotFoundException("Provided username: \'" + getHcpUser()
-                        + "\' is not authorized to perform http requests to HCP or wrong username/password provided.");
-            }
-            csrfToken = responseCsrfHeader.getValue();
-            logger.info("Fetched CSRF token " + csrfToken);
-        }
+        // Currently the caching is disabled, the token is refetched every time
+        return fetchCsrfToken();
+    }
 
-        return csrfToken;
+    private String fetchCsrfToken() throws IOException, URISyntaxException, RoleNotFoundException {
+        URIBuilder uriBuilder = new URIBuilder(getHcpUrl() + "/rest/csrf");
+        Request request = Request.Get(uriBuilder.build())
+                .addHeader("Authorization", "Basic " + buildAuthString())
+                .addHeader("x-csrf-token", "fetch");
+        HttpResponse response = withOptionalProxy(request).execute().returnResponse();
+        Header responseCsrfHeader = response.getFirstHeader("x-csrf-token");
+        if( responseCsrfHeader == null ) {
+            throw new RoleNotFoundException("Provided username: \'" + getHcpUser()
+                    + "\' is not authorized to perform http requests to HCP or wrong username/password provided.");
+        }
+        String result = responseCsrfHeader.getValue();
+        logger.debug("Fetched CSRF token " + result);
+        return result;
     }
 
     public String buildAuthString()

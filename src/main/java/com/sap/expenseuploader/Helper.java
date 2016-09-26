@@ -3,6 +3,7 @@ package com.sap.expenseuploader;
 import com.sap.expenseuploader.model.Expense;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.poi.ss.usermodel.Cell;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -56,5 +57,19 @@ public class Helper
     public static String stripLeadingZeros( String str )
     {
         return str.replaceFirst("^0+(?!$)", "");
+    }
+
+    public static Object getCellValue( Cell cell )
+    {
+        switch( cell.getCellType() ) {
+            case Cell.CELL_TYPE_STRING:
+                return cell.getStringCellValue();
+            case Cell.CELL_TYPE_BOOLEAN:
+                return cell.getBooleanCellValue();
+            case Cell.CELL_TYPE_NUMERIC:
+                return cell.getNumericCellValue();
+        }
+
+        return null;
     }
 }

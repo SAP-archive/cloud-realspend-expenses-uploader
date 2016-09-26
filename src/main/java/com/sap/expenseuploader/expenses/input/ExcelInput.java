@@ -2,7 +2,6 @@ package com.sap.expenseuploader.expenses.input;
 
 import com.sap.expenseuploader.model.Expense;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
-import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -13,11 +12,13 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.sap.expenseuploader.Helper.getCellValue;
+
 /**
  * Reads expenses from an excel sheet. This enables either uploading external expenses (not
  * from the ERP system), or modifying the expenses exported as excel from the ERP.
  * Example excel sheet can be found in /test/resources
- * <p>
+ *
  * The entire first sheet of the Excel file is used as input. Command line parameters are not respected.
  */
 public class ExcelInput implements ExpenseInput
@@ -62,19 +63,5 @@ public class ExcelInput implements ExpenseInput
         inputStream.close();
 
         return expenses;
-    }
-
-    private Object getCellValue( Cell cell )
-    {
-        switch( cell.getCellType() ) {
-            case Cell.CELL_TYPE_STRING:
-                return cell.getStringCellValue();
-            case Cell.CELL_TYPE_BOOLEAN:
-                return cell.getBooleanCellValue();
-            case Cell.CELL_TYPE_NUMERIC:
-                return cell.getNumericCellValue();
-        }
-
-        return null;
     }
 }
