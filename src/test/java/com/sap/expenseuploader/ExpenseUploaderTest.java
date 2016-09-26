@@ -42,7 +42,7 @@ public class ExpenseUploaderTest
     public void testExcelInput()
     {
         try {
-            ExcelInput excelInput = new ExcelInput("src/test/resources/Input_Excel.xls");
+            ExcelInput excelInput = new ExcelInput("src/test/resources/Input_Excel.xlsx");
             List<Expense> expenses = excelInput.getExpenses();
             assertEquals(54, expenses.size());
         }
@@ -57,9 +57,9 @@ public class ExpenseUploaderTest
     {
         List<Expense> expenses = new ArrayList<>();
         expenses.add(new Expense("2000-01-01", "FOO", "cc", "acc", "pers", "ord", "con", "req", "1090.01", "cur"));
-        ExcelOutput output = new ExcelOutput("expenses.xls");
+        ExcelOutput output = new ExcelOutput("expenses.xlsx");
         output.putExpenses(expenses);
-        File outputFile = new File("expenses.xls");
+        File outputFile = new File("expenses.xlsx");
         assertTrue(outputFile.exists());
         assertNotEquals(0, outputFile.length());
         outputFile.delete();

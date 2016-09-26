@@ -3,8 +3,8 @@ package com.sap.expenseuploader.expenses.input;
 import com.sap.expenseuploader.model.Expense;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -37,7 +37,7 @@ public class ExcelInput implements ExpenseInput
         List<Expense> expenses = new ArrayList<>();
 
         try( FileInputStream inputStream = new FileInputStream(this.inputFile) ) {
-            Workbook workbook = new HSSFWorkbook(inputStream);
+            Workbook workbook = new XSSFWorkbook(inputStream);
             Sheet firstSheet = workbook.getSheetAt(0);
 
             int cellsNumber = 0;
