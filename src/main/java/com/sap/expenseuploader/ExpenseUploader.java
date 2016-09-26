@@ -3,8 +3,8 @@ package com.sap.expenseuploader;
 import com.sap.expenseuploader.budgets.BudgetHcpOutput;
 import com.sap.expenseuploader.config.ExpenseInputConfig;
 import com.sap.expenseuploader.config.HcpConfig;
-import com.sap.expenseuploader.config.budget.ExcelBudgetConfig;
-import com.sap.expenseuploader.config.costcenter.ExcelCostCenterConfig;
+import com.sap.expenseuploader.config.budget.JsonBudgetConfig;
+import com.sap.expenseuploader.config.costcenter.JsonCostCenterConfig;
 import com.sap.expenseuploader.expenses.input.ErpInput;
 import com.sap.expenseuploader.expenses.input.ExcelInput;
 import com.sap.expenseuploader.expenses.input.ExpenseInput;
@@ -13,10 +13,10 @@ import com.sap.expenseuploader.expenses.output.ExcelOutput;
 import com.sap.expenseuploader.expenses.output.ExpenseHcpOutput;
 import com.sap.expenseuploader.expenses.output.ExpenseOutput;
 import com.sap.expenseuploader.model.Expense;
-import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.commons.cli.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 
 import javax.management.relation.RoleNotFoundException;
 import java.io.IOException;
@@ -32,14 +32,14 @@ public class ExpenseUploader
     private static final Logger logger = LogManager.getLogger(ExpenseUploader.class);
 
     public static void main( String[] args )
-            throws
-            IOException,
-            org.json.simple.parser.ParseException,
-            ParseException,
-            java.text.ParseException,
-            RoleNotFoundException,
-            URISyntaxException,
-            InvalidFormatException
+        throws
+        IOException,
+        org.json.simple.parser.ParseException,
+        ParseException,
+        java.text.ParseException,
+        RoleNotFoundException,
+        URISyntaxException,
+        InvalidFormatException
     {
         logger.info("--- Expense & Budget Uploader ---");
 
@@ -55,6 +55,7 @@ public class ExpenseUploader
         options.addOption("x", "hcp_proxy", true, "proxy server (optional), e.g. example.com:8080");
         options.addOption("h", "help", false, "print this message");
         options.addOption("b", "budgets", false, "upload budgets to HCP (optional, needs HCP URL)");
+        options.addOption("r", "resume", false, "retry uploading failed expense uploading requests from previous run");
 
         // Options for Expenses
         options.addOption("in_erp",
@@ -82,17 +83,12 @@ public class ExpenseUploader
         // Prepare config for expenses, create inputs and outputs
         ExpenseInput expenseInput = null;
         List<ExpenseOutput> expenseOutputs = new ArrayList<>();
-        if (cmd.hasOption("in_erp")) {
-            expenseInput = new ErpInput(
-                new ExpenseInputConfig(
-                    cmd.getOptionValue("in_erp"),
-                    cmd.getOptionValue("c"),
-                    cmd.getOptionValue("f"),
-                    cmd.getOptionValue("t"),
-                    cmd.getOptionValue("p")
-                ),
-                new ExcelCostCenterConfig()
-            );
+        if( cmd.hasOption("in_erp") ) {
+            expenseInput = new ErpInput(new ExpenseInputConfig(cmd.getOptionValue("in_erp"),
+                cmd.getOptionValue("c"),
+                cmd.getOptionValue("f"),
+                cmd.getOptionValue("t"),
+                cmd.getOptionValue("p")), new JsonCostCenterConfig());
         }
         if( cmd.hasOption("in_xls") ) {
             if( expenseInput != null ) {
@@ -109,17 +105,12 @@ public class ExpenseUploader
                 logger.error("Please specify the HCP URL to upload expenses");
                 System.exit(1);
             }
-            expenseOutputs.add(
-                new ExpenseHcpOutput(
-                    new HcpConfig(
-                        cmd.getOptionValue("url"),
-                        cmd.getOptionValue("user"),
-                        cmd.getOptionValue("pass"),
-                        cmd.getOptionValue("x")
-                    ),
-                    new ExcelCostCenterConfig()
-                )
-            );
+
+            expenseOutputs.add(new ExpenseHcpOutput(new HcpConfig(cmd.getOptionValue("url"),
+                cmd.getOptionValue("user"),
+                cmd.getOptionValue("pass"),
+                cmd.getOptionValue("x"),
+                cmd.hasOption("r")), new JsonCostCenterConfig()));
         }
         if( cmd.hasOption("out_xls") ) {
             expenseOutputs.add(new ExcelOutput(cmd.getOptionValue("out_xls")));
@@ -162,16 +153,14 @@ public class ExpenseUploader
         logger.info("");
         if( cmd.hasOption("b") ) {
             logger.info("== Uploading Budgets ==");
-            BudgetHcpOutput budgetHcpOutput = new BudgetHcpOutput(
-                new ExcelBudgetConfig(),
-                new HcpConfig(
-                    cmd.getOptionValue("url"),
+            BudgetHcpOutput budgetHcpOutput = new BudgetHcpOutput(new JsonBudgetConfig(),
+                new HcpConfig(cmd.getOptionValue("url"),
                     cmd.getOptionValue("user"),
                     cmd.getOptionValue("pass"),
-                    cmd.getOptionValue("x")));
+                    cmd.getOptionValue("x"),
+                    cmd.hasOption("r")));
             budgetHcpOutput.putBudgets();
-        }
-        else {
+        } else {
             logger.info("No budgets will be uploaded! Consider using the option 'budgets' if they are required.");
         }
 

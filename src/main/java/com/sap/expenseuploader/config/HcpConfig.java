@@ -21,15 +21,19 @@ public class HcpConfig
     private String hcpUrl;
     private String hcpUser;
     private String hcpPass;
-    private String proxy; // Null if no proxy
+    private String proxy; // Can be null
+    private boolean resume;
 
-    public HcpConfig(String hcpUrl, String hcpUser, String hcpPass, String proxy)
-        throws IOException, URISyntaxException, RoleNotFoundException
+    // CSRF token
+    private String csrfToken;
+
+    public HcpConfig( String hcpUrl, String hcpUser, String hcpPass, String proxy, boolean resume )
     {
         this.hcpUrl = hcpUrl;
         this.hcpUser = hcpUser;
         this.hcpPass = hcpPass;
         this.proxy = proxy;
+        this.resume = resume;
     }
 
     public String getHcpUrl()
@@ -66,6 +70,11 @@ public class HcpConfig
         return this.hcpPass;
     }
 
+    public boolean isResumeSet()
+    {
+        return resume;
+    }
+
     public Request withOptionalProxy( Request request )
     {
         if( this.proxy != null && !this.proxy.isEmpty() ) {
@@ -76,6 +85,7 @@ public class HcpConfig
 
     /**
      * Fetches a CSRF token from RealSpend and authenticates.
+     *
      * @return CSRF token
      * @throws URISyntaxException
      * @throws IOException
@@ -88,17 +98,19 @@ public class HcpConfig
         return fetchCsrfToken();
     }
 
-    private String fetchCsrfToken() throws IOException, URISyntaxException, RoleNotFoundException {
+    private String fetchCsrfToken()
+        throws IOException, URISyntaxException, RoleNotFoundException
+    {
         URIBuilder uriBuilder = new URIBuilder(getHcpUrl() + "/rest/csrf");
         Request request = Request.Get(uriBuilder.build())
-                .addHeader("Authorization", "Basic " + buildAuthString())
-                .addHeader("x-csrf-token", "fetch");
+            .addHeader("Authorization", "Basic " + buildAuthString())
+            .addHeader("x-csrf-token", "fetch");
         HttpResponse response = withOptionalProxy(request).execute().returnResponse();
         Header responseCsrfHeader = response.getFirstHeader("x-csrf-token");
         // FIXME: Show more info if request fails (HTTP status line + body)
         if( responseCsrfHeader == null ) {
             throw new RoleNotFoundException("Provided username: \'" + getHcpUser()
-                    + "\' is not authorized to perform http requests to HCP or wrong username/password provided.");
+                + "\' is not authorized to perform http requests to HCP or wrong username/password provided.");
         }
         String result = responseCsrfHeader.getValue();
         logger.debug("Fetched CSRF token " + result);
