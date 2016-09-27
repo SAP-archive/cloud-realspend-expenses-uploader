@@ -2,8 +2,8 @@ package com.sap.expenseuploader.budgets;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import com.sap.expenseuploader.config.budget.BudgetConfig;
 import com.sap.expenseuploader.config.HcpConfig;
+import com.sap.expenseuploader.config.budget.BudgetConfig;
 import com.sap.expenseuploader.model.BudgetEntry;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.fluent.Request;
@@ -108,17 +108,16 @@ public class BudgetHcpOutput
         throws URISyntaxException, IOException, ParseException
     {
         URIBuilder uriBuilder = new URIBuilder(this.hcpConfig.getHcpUrl() + "/rest/tagging/dimension");
-        Request request = Request.Get(uriBuilder.build())
-                .addHeader("Authorization", "Basic " + this.hcpConfig.buildAuthString());
+        Request request =
+            Request.Get(uriBuilder.build()).addHeader("Authorization", "Basic " + this.hcpConfig.buildAuthString());
         HttpResponse response = this.hcpConfig.withOptionalProxy(request).execute().returnResponse();
 
         // Check response
         int statusCode = response.getStatusLine().getStatusCode();
         if( statusCode != 200 ) {
-            logger.error(String.format(
-                "Got http code %s while reading tags for user %s",
-                statusCode, this.hcpConfig.getHcpUser())
-            );
+            logger.error(String.format("Got http code %s while reading tags for user %s",
+                statusCode,
+                this.hcpConfig.getHcpUser()));
             logger.error("URL was: " + uriBuilder.build());
             logger.error("Body is: " + getBodyFromResponse(response));
             throw new IOException("Unable to read tags from HCP");
@@ -254,12 +253,12 @@ public class BudgetHcpOutput
             this.tagGroupIds.put(tagGroupName.toLowerCase(), tagGroupID);
             this.tagNameIds.put(tagGroupName.toLowerCase(), new HashMap<String, Long>());
         }
-
+        
         // creating the new tag
         if( !this.tagNameIds.get(tagGroupName.toLowerCase()).containsKey(tagName.toLowerCase()) ) {
             long tagID = createTag(tagGroupName, tagName);
 
-            Map<String, Long> groupTagsMap = new HashMap<>();
+            Map<String, Long> groupTagsMap = this.tagNameIds.get(tagGroupName.toLowerCase());
             groupTagsMap.put(tagName.toLowerCase(), tagID);
             this.tagNameIds.put(tagGroupName.toLowerCase(), groupTagsMap);
         }
