@@ -29,10 +29,54 @@ public class ExcelBudgetConfig extends BudgetConfig
         XSSFWorkbook workbook = new XSSFWorkbook(pkg);
 
         // Read budgets
-        // TODO read overall budgets
+        readOverallBudgets(workbook.getSheetAt(1));
         readMasterDataBudgets(workbook.getSheetAt(2), "costcenter");
         readMasterDataBudgets(workbook.getSheetAt(3), "account");
         readTagBudgets(workbook.getSheetAt(4));
+    }
+
+    private void readOverallBudgets(XSSFSheet sheet) throws InvalidFormatException
+    {
+        Iterator<Row> rowIterator = sheet.iterator();
+
+        // Skip header
+        if (rowIterator.hasNext()) {
+            rowIterator.next();
+        } else {
+            logger.error("There should be a header row here ...");
+        }
+
+        while (rowIterator.hasNext()) {
+            Row row = rowIterator.next();
+            Iterator<Cell> cellIterator = row.cellIterator();
+
+            Cell cell = cellIterator.next();
+            String year = dataFormatter.formatCellValue(cell);
+            if (year.isEmpty()) {
+                logger.debug("Skipping empty line ...");
+                continue;
+            }
+            cell = cellIterator.next();
+            String user = dataFormatter.formatCellValue(cell);
+            cell = cellIterator.next();
+            double budget = getBudgetFromCell(cell, "overall");
+            cell = cellIterator.next();
+            String currency = dataFormatter.formatCellValue(cell);
+
+            if (!userOverallBudgets.containsKey(user)) {
+                userOverallBudgets.put(user, new ArrayList<BudgetEntry>());
+            }
+            if (hasExistingBudget(userOverallBudgets.get(user), year)) {
+                String errorMessage = String.format(
+                    "Duplicate overall budget detected for user %s and year %s",
+                    user, year
+                );
+                logger.error(errorMessage);
+                throw new InvalidFormatException(errorMessage);
+            }
+            BudgetEntry entry = new BudgetEntry(budget, currency, Long.parseLong(year));
+            userOverallBudgets.get(user).add(entry);
+        }
     }
 
     private void readMasterDataBudgets(XSSFSheet sheet, String masterDataType) throws InvalidFormatException

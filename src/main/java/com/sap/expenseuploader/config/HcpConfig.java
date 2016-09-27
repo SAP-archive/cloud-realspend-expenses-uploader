@@ -103,8 +103,13 @@ public class HcpConfig
             .addHeader("x-csrf-token", "fetch");
         HttpResponse response = withOptionalProxy(request).execute().returnResponse();
         Header responseCsrfHeader = response.getFirstHeader("x-csrf-token");
-        // FIXME: Show more info if request fails (HTTP status line + body)
-        if( responseCsrfHeader == null ) {
+        int statusCode = response.getStatusLine().getStatusCode();
+        if( statusCode != 200 ) {
+            logger.error(String.format("Got http code %s while fetching CSRF token", statusCode));
+            logger.error("URL was: " + uriBuilder.build());
+            logger.error("Error is: " + getBodyFromResponse(response));
+        }
+        if (responseCsrfHeader == null ) {
             throw new RuntimeException("Failed to fetch CSRF token.");
         }
         String result = responseCsrfHeader.getValue();

@@ -23,6 +23,14 @@ public class ExcelBudgetConfigTest {
     {
         BudgetConfig config = new ExcelBudgetConfig("src/test/resources/config/working.xlsx");
 
+        // Overall budgets
+        assertTrue(config.getOverallBudgetsOfUser("S12345670").contains(new BudgetEntry(5000000, "EUR", 2015)));
+        assertTrue(config.getOverallBudgetsOfUser("S12345678").contains(new BudgetEntry(200000, "EUR", 2015)));
+        assertTrue(config.getOverallBudgetsOfUser("S12345679").contains(new BudgetEntry(4000000, "EUR", 2015)));
+        assertEquals(1, config.getOverallBudgetsOfUser("S12345670").size());
+        assertEquals(1, config.getOverallBudgetsOfUser("S12345678").size());
+        assertEquals(1, config.getOverallBudgetsOfUser("S12345679").size());
+
         // Cost Center Budgets
         assertTrue(config.getMasterDataBudgetsOfUser("S12345670", "costcenter").get("1104341")
             .contains(new BudgetEntry(5000000, "EUR", 2015)));

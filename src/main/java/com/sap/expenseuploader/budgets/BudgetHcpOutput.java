@@ -80,7 +80,7 @@ public class BudgetHcpOutput
             Map<String, List<BudgetEntry>> masterDataBudgets;
 
             // Upload overall budgets
-            // TODO
+            putOverallBudgets(user, budgetConfig.getOverallBudgetsOfUser(user));
 
             // Upload account budgets
             masterDataBudgets = budgetConfig.getMasterDataBudgetsOfUser(user, "account");
@@ -144,11 +144,57 @@ public class BudgetHcpOutput
         }
     }
 
+    private void putOverallBudgets(String user, List<BudgetEntry> entries) throws URISyntaxException, IOException
+    {
+        if( entries.isEmpty() ) {
+            logger.debug("No overall budgets to put ...");
+            return;
+        }
+
+        JsonObject payload = new JsonObject();
+        payload.addProperty("user", user);
+        JsonArray budgets = new JsonArray();
+        for (BudgetEntry entry: entries) {
+            JsonObject budget = new JsonObject();
+            budget.addProperty("amount", entry.amount);
+            budget.addProperty("currency", entry.currency);
+            budget.addProperty("year", entry.year);
+            budgets.add(budget);
+        }
+
+        if( budgets.size() == 0 ) {
+            logger.debug("Nothing to do here ...");
+            return;
+        }
+        payload.add("budgets", budgets);
+
+        URIBuilder uriBuilder = new URIBuilder(this.hcpConfig.getHcpUrl() + "/rest/budget");
+        Request request = Request.Put(uriBuilder.build())
+            .addHeader("x-csrf-token", this.hcpConfig.getCsrfToken())
+            .bodyString(payload.toString(), ContentType.APPLICATION_JSON);
+        HttpResponse response = this.hcpConfig.withOptionalProxy(request).execute().returnResponse();
+
+        int statusCode = response.getStatusLine().getStatusCode();
+        if( statusCode == 200 ) {
+            logger.info(String.format("Successfully uploaded %s overall budget(s) for user %s", entries.size(), user));
+            logger.debug("URL was: " + uriBuilder.build());
+            logger.debug("Payload was: " + payload.toString());
+        } else {
+            logger.error(String.format("Got http code %s while uploading %s tag budget(s) for user %s",
+                    statusCode,
+                    entries.size(),
+                    user));
+            logger.error("URL was: " + uriBuilder.build());
+            logger.error("Payload was: " + payload.toString());
+            logger.error("Error is: " + getBodyFromResponse(response));
+        }
+    }
+
     private void putTagBudgets( String tagGroupName, String user, Map<String, List<BudgetEntry>> entries )
         throws URISyntaxException, IOException, RoleNotFoundException, ParseException
     {
         if( entries.isEmpty() ) {
-            logger.debug("No budgets to put ...");
+            logger.debug("No tag budgets to put ...");
             return;
         }
 
@@ -185,11 +231,11 @@ public class BudgetHcpOutput
 
         int statusCode = response.getStatusLine().getStatusCode();
         if( statusCode == 200 ) {
-            logger.info(String.format("Successfully uploaded %s tag budgets for user %s", entries.size(), user));
+            logger.info(String.format("Successfully uploaded %s tag budget(s) for user %s", entries.size(), user));
             logger.debug("URL was: " + uriBuilder.build());
             logger.debug("Payload was: " + payload.toString());
         } else {
-            logger.error(String.format("Got http code %s while uploading %s tag budgets for user %s",
+            logger.error(String.format("Got http code %s while uploading %s tag budget(s) for user %s",
                 statusCode,
                 entries.size(),
                 user));
@@ -350,11 +396,11 @@ public class BudgetHcpOutput
             for( String masterDataName : entries.keySet() ) {
                 count += entries.get(masterDataName).size();
             }
-            logger.info(String.format("Successfully uploaded %s master data budgets for user %s", count, user));
+            logger.info(String.format("Successfully uploaded %s master data budget(s) for user %s", count, user));
             logger.debug("URL was: " + uriBuilder.build());
             logger.debug("Payload was: " + payload.toString());
         } else {
-            logger.error(String.format("Got http code %s while uploading %s master data budgets for user %s",
+            logger.error(String.format("Got http code %s while uploading %s master data budget(s) for user %s",
                 statusCode,
                 entries.size(),
                 user));

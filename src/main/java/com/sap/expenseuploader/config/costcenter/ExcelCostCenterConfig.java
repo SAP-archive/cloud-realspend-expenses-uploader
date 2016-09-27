@@ -45,14 +45,23 @@ public class ExcelCostCenterConfig extends CostCenterConfig
             Row row = rowIterator.next();
             Iterator<Cell> cellIterator = row.cellIterator();
 
-            String user = dataFormatter.formatCellValue(cellIterator.next());
-            String costCenter = dataFormatter.formatCellValue(cellIterator.next());
+            // Read line
+            Cell cell = cellIterator.next();
+            String user = dataFormatter.formatCellValue(cell);
+            if (user.isEmpty()) {
+                logger.debug("Skipping empty line ...");
+                continue;
+            }
+            cell = cellIterator.next();
+            String costCenter = dataFormatter.formatCellValue(cell);
 
+            // Store user -> cost center
             if (!userCostCenters.containsKey(user)) {
                 userCostCenters.put(user, new ArrayList<String>());
             }
             userCostCenters.get(user).add(Helper.stripLeadingZeros(costCenter));
 
+            // Store cost center -> user
             if (!costCenterUsers.containsKey(costCenter)) {
                 costCenterUsers.put(costCenter, new ArrayList<String>());
             }
