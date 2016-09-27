@@ -3,8 +3,8 @@ package com.sap.expenseuploader;
 import com.sap.expenseuploader.budgets.BudgetHcpOutput;
 import com.sap.expenseuploader.config.ExpenseInputConfig;
 import com.sap.expenseuploader.config.HcpConfig;
-import com.sap.expenseuploader.config.budget.JsonBudgetConfig;
-import com.sap.expenseuploader.config.costcenter.JsonCostCenterConfig;
+import com.sap.expenseuploader.config.budget.ExcelBudgetConfig;
+import com.sap.expenseuploader.config.costcenter.ExcelCostCenterConfig;
 import com.sap.expenseuploader.expenses.input.ErpInput;
 import com.sap.expenseuploader.expenses.input.ExcelInput;
 import com.sap.expenseuploader.expenses.input.ExpenseInput;
@@ -19,6 +19,7 @@ import org.apache.logging.log4j.Logger;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 
 import javax.management.relation.RoleNotFoundException;
+import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -29,6 +30,8 @@ import java.util.List;
  */
 public class ExpenseUploader
 {
+    private static final String DEFAULT_CONFIG_PATH = "config.xlsx";
+
     private static final Logger logger = LogManager.getLogger(ExpenseUploader.class);
 
     public static void main( String[] args )
@@ -46,6 +49,11 @@ public class ExpenseUploader
         Options options = new Options();
 
         // General options
+        options.addOption("h", "help", false, "print this message");
+        options.addOption("c", "config", true, "path to configuration file (default is " + DEFAULT_CONFIG_PATH + ")");
+        options.addOption("b", "budgets", false, "upload budgets to HCP (optional, needs HCP URL)");
+
+        // HCP options
         options.addOption("url",
             "hcp_url",
             true,
@@ -53,8 +61,6 @@ public class ExpenseUploader
         options.addOption("user", "hcp_user", true, "your hcp username (optional, will prompt), e.g. p12345trial");
         options.addOption("pass", "hcp_password", true, "your hcp password (optional, will prompt)");
         options.addOption("x", "hcp_proxy", true, "proxy server (optional), e.g. example.com:8080");
-        options.addOption("h", "help", false, "print this message");
-        options.addOption("b", "budgets", false, "upload budgets to HCP (optional, needs HCP URL)");
         options.addOption("r", "resume", false, "retry uploading failed expense uploading requests from previous run");
 
         // Options for Expenses
@@ -66,7 +72,7 @@ public class ExpenseUploader
         options.addOption("out_cli", "output_cli", false, "write expenses to command line");
         options.addOption("out_hcp", "output_hcp", false, "write expenses to HCP");
         options.addOption("out_xls", "output_xls", true, "write expenses to excel file (path needed)");
-        options.addOption("c", "controlling-area", true, "controlling area, e.g. 0001");
+        options.addOption("ca", "controlling-area", true, "controlling area, e.g. 0001");
         options.addOption("f", "from", true, "lower posting date in YYYYMMDD format");
         options.addOption("t", "to", true, "higher posting date in YYYYMMDD format (optional)");
         options.addOption("p", "period", true, "period (optional), e.g. 001");
@@ -74,21 +80,50 @@ public class ExpenseUploader
         CommandLineParser parser = new DefaultParser();
         CommandLine cmd = parser.parse(options, args);
 
+        // Print help
         if( cmd.hasOption("h") ) {
             HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp(" ", options);
             return;
         }
 
+        // Look for config file
+        String configPath = DEFAULT_CONFIG_PATH;
+        if (cmd.hasOption("c")) {
+            configPath = cmd.getOptionValue("c");
+        }
+        File configFile = new File(configPath);
+        if (!configFile.exists() || configFile.isDirectory()) {
+            logger.error("Unable to find configuration file at " + configFile.getAbsolutePath());
+            System.exit(1);
+        }
+
+        // Prepare HCP config
+        HcpConfig hcpConfig = null;
+        if (cmd.hasOption("url")) {
+            hcpConfig = new HcpConfig(
+                cmd.getOptionValue("url"),
+                cmd.getOptionValue("user"),
+                cmd.getOptionValue("pass"),
+                cmd.getOptionValue("x"),
+                cmd.hasOption("r")
+            );
+        }
+
         // Prepare config for expenses, create inputs and outputs
         ExpenseInput expenseInput = null;
         List<ExpenseOutput> expenseOutputs = new ArrayList<>();
         if( cmd.hasOption("in_erp") ) {
-            expenseInput = new ErpInput(new ExpenseInputConfig(cmd.getOptionValue("in_erp"),
-                cmd.getOptionValue("c"),
-                cmd.getOptionValue("f"),
-                cmd.getOptionValue("t"),
-                cmd.getOptionValue("p")), new JsonCostCenterConfig());
+            expenseInput = new ErpInput(
+                new ExpenseInputConfig(
+                    cmd.getOptionValue("in_erp"),
+                    cmd.getOptionValue("ca"),
+                    cmd.getOptionValue("f"),
+                    cmd.getOptionValue("t"),
+                    cmd.getOptionValue("p")
+                ),
+                new ExcelCostCenterConfig(configPath)
+            );
         }
         if( cmd.hasOption("in_xls") ) {
             if( expenseInput != null ) {
@@ -106,11 +141,12 @@ public class ExpenseUploader
                 System.exit(1);
             }
 
-            expenseOutputs.add(new ExpenseHcpOutput(new HcpConfig(cmd.getOptionValue("url"),
-                cmd.getOptionValue("user"),
-                cmd.getOptionValue("pass"),
-                cmd.getOptionValue("x"),
-                cmd.hasOption("r")), new JsonCostCenterConfig()));
+            expenseOutputs.add(
+                new ExpenseHcpOutput(
+                    hcpConfig,
+                    new ExcelCostCenterConfig(configPath)
+                )
+            );
         }
         if( cmd.hasOption("out_xls") ) {
             expenseOutputs.add(new ExcelOutput(cmd.getOptionValue("out_xls")));
@@ -118,7 +154,7 @@ public class ExpenseUploader
         if( expenseInput == null && expenseOutputs.size() == 0 ) { // No expenses
             logger.info("No inputs or outputs defined, skipping expenses");
         } else if( expenseInput != null && expenseOutputs.size() != 0 ) { // Correct number of in- and outputs
-            if( !cmd.hasOption("f") || !cmd.hasOption("c") ) {
+            if( !cmd.hasOption("f") || !cmd.hasOption("ca") ) {
                 logger.error("Please specify expense parameters 'from' and 'controlling-area'");
                 System.exit(1);
             }
@@ -153,12 +189,10 @@ public class ExpenseUploader
         logger.info("");
         if( cmd.hasOption("b") ) {
             logger.info("== Uploading Budgets ==");
-            BudgetHcpOutput budgetHcpOutput = new BudgetHcpOutput(new JsonBudgetConfig(),
-                new HcpConfig(cmd.getOptionValue("url"),
-                    cmd.getOptionValue("user"),
-                    cmd.getOptionValue("pass"),
-                    cmd.getOptionValue("x"),
-                    cmd.hasOption("r")));
+            BudgetHcpOutput budgetHcpOutput = new BudgetHcpOutput(
+                new ExcelBudgetConfig(configPath),
+                hcpConfig
+            );
             budgetHcpOutput.putBudgets();
         } else {
             logger.info("No budgets will be uploaded! Consider using the option 'budgets' if they are required.");

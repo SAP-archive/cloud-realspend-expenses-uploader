@@ -17,15 +17,8 @@ import java.util.*;
 
 public class ExcelBudgetConfig extends BudgetConfig
 {
-    private final static String BUDGETS_EXCEL = "config.xlsx";
-
     private final Logger logger = LogManager.getLogger(this.getClass());
     private final DataFormatter dataFormatter = new DataFormatter();
-
-    public ExcelBudgetConfig() throws IOException, InvalidFormatException
-    {
-        this(BUDGETS_EXCEL);
-    }
 
     public ExcelBudgetConfig(String path) throws IOException, InvalidFormatException
     {
@@ -36,6 +29,7 @@ public class ExcelBudgetConfig extends BudgetConfig
         XSSFWorkbook workbook = new XSSFWorkbook(pkg);
 
         // Read budgets
+        // TODO read overall budgets
         readMasterDataBudgets(workbook.getSheetAt(2), "costcenter");
         readMasterDataBudgets(workbook.getSheetAt(3), "account");
         readTagBudgets(workbook.getSheetAt(4));

@@ -21,9 +21,9 @@ public abstract class CostCenterConfig
     }
 
     /**
-     * Returns the sorted list of all unique users (for cost centers, not for budgets)
+     * Returns the sorted list of all unique users
      */
-    public List<String> getCostCenterUserList()
+    public List<String> getUserList()
     {
         List<String> result = new ArrayList<>(userCostCenters.keySet());
         Collections.sort(result);
