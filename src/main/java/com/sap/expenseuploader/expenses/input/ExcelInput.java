@@ -51,7 +51,6 @@ public class ExcelInput implements ExpenseInput
             }
             catch (Exception e) { // TODO catch the real exception
                 logger.warn("Excel file of expenses is not in XLSX format, falling back to XLS");
-                e.printStackTrace();
                 inputStream.close();
                 inputStream = new FileInputStream(this.inputFile);
                 workbook = new HSSFWorkbook(inputStream);
