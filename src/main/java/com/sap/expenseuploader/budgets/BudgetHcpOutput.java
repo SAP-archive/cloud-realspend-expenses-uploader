@@ -105,10 +105,12 @@ public class BudgetHcpOutput
         throws URISyntaxException, IOException, ParseException
     {
         URIBuilder uriBuilder = new URIBuilder(this.hcpConfig.getHcpUrl() + "/rest/tagging/dimension");
-        Response response = this.hcpConfig.withOptionalProxy(Request.Get(uriBuilder.build())).execute();
+        Request request = Request.Get(uriBuilder.build())
+                .addHeader("Authorization", "Basic " + this.hcpConfig.buildAuthString());
+        HttpResponse response = this.hcpConfig.withOptionalProxy(request).execute().returnResponse();
 
         // Parse JSON
-        String responseAsString = response.returnContent().toString();
+        String responseAsString = this.hcpConfig.getBodyFromResponse(response);
         logger.debug("Got tagging dimensions: " + responseAsString);
         JSONParser parser = new JSONParser();
         JSONObject propertyMap = (JSONObject) parser.parse(responseAsString);
