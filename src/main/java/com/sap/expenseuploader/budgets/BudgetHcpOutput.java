@@ -79,6 +79,9 @@ public class BudgetHcpOutput
 
             Map<String, List<BudgetEntry>> masterDataBudgets;
 
+            // Upload overall budgets
+            // TODO
+
             // Upload account budgets
             masterDataBudgets = budgetConfig.getMasterDataBudgetsOfUser(user, "account");
             putMasterDataBudgets("account", user, masterDataBudgets);
@@ -108,6 +111,18 @@ public class BudgetHcpOutput
         Request request = Request.Get(uriBuilder.build())
                 .addHeader("Authorization", "Basic " + this.hcpConfig.buildAuthString());
         HttpResponse response = this.hcpConfig.withOptionalProxy(request).execute().returnResponse();
+
+        // Check response
+        int statusCode = response.getStatusLine().getStatusCode();
+        if( statusCode != 200 ) {
+            logger.error(String.format(
+                "Got http code %s while reading tags for user %s",
+                statusCode, this.hcpConfig.getHcpUser())
+            );
+            logger.error("URL was: " + uriBuilder.build());
+            logger.error("Body is: " + getBodyFromResponse(response));
+            throw new IOException("Unable to read tags from HCP");
+        }
 
         // Parse JSON
         String responseAsString = this.hcpConfig.getBodyFromResponse(response);

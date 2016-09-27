@@ -62,7 +62,7 @@ public class ExpenseHcpOutput implements ExpenseOutput
                 long batchID = 0;
 
                 // Upload
-                for( String user : this.costCenterConfig.getCostCenterUserList() ) {
+                for( String user : this.costCenterConfig.getUserList() ) {
                     List<String> costCenters = this.costCenterConfig.getCostCenters(user);
                     List<Expense> userExpenses = new ArrayList<>();
                     for( Expense expense : expenses ) {
@@ -107,7 +107,6 @@ public class ExpenseHcpOutput implements ExpenseOutput
      * @throws IOException
      * @throws URISyntaxException
      */
-
     private boolean checkRequestFolderForResume( boolean resumeFlagSet )
         throws RoleNotFoundException, IOException, URISyntaxException
     {

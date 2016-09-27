@@ -84,6 +84,8 @@ public class ErpInput implements ExpenseInput
                 table.setValue("LOW", costCenter);
             }
 
+            logger.info("Will read data from ERP for cost centers " + costCenterConfig.getCostCenterList().toString());
+
             // Execute BAPI
             bapiAccCoDocFind.execute(destination);
 

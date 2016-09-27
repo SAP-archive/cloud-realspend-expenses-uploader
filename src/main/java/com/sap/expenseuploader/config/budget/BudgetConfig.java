@@ -6,6 +6,10 @@ import java.util.*;
 
 public abstract class BudgetConfig
 {
+    // Map from the user to the overall budgets
+    // user -> entries
+    protected final Map<String, List<BudgetEntry>> userOverallBudgets = new HashMap<>();
+
     // Map from user to the budgets of tags
     // user -> tag group -> tag name -> entries
     protected final Map<String, Map<String, Map<String, List<BudgetEntry>>>> userTagBudgets = new HashMap<>();
@@ -13,6 +17,14 @@ public abstract class BudgetConfig
     // Map from user to the budgets of master data
     // user -> master data type -> master data name -> entries
     protected final Map<String, Map<String, Map<String, List<BudgetEntry>>>> userMasterDataBudgets = new HashMap<>();
+
+    public List<BudgetEntry> getOverallBudgetsOfUser(String user) {
+        if (userOverallBudgets.containsKey(user)) {
+            // Immutable empty map
+            return Collections.emptyList();
+        }
+        return userOverallBudgets.get(user);
+    }
 
     /**
      * Returns the tags of this user
@@ -60,6 +72,8 @@ public abstract class BudgetConfig
 
     @Override
     public String toString() {
-        return "Master data: " + userMasterDataBudgets.toString() + ", Tags: " + userTagBudgets.toString();
+        return "Master data: " + userMasterDataBudgets.toString()
+                + ", Tags: " + userTagBudgets.toString()
+                + ", Overall: " + userOverallBudgets.toString();
     }
 }

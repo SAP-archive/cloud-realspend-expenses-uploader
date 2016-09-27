@@ -19,7 +19,7 @@ public class ExcelCostCenterConfigTest {
         System.out.println(config.toString());
 
         assertEquals("[1104340, 1104341, 1104342]", config.getCostCenterList().toString());
-        assertEquals("[S12345670, S12345678, S12345679]", config.getCostCenterUserList().toString());
+        assertEquals("[S12345670, S12345678, S12345679]", config.getUserList().toString());
         assertTrue(config.getCostCenters("S12345670").contains("1104341"));
         assertTrue(config.getCostCenters("S12345678").contains("1104340"));
         assertTrue(config.getCostCenters("S12345678").contains("1104342"));

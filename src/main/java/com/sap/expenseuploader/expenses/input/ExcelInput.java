@@ -3,12 +3,14 @@ package com.sap.expenseuploader.expenses.input;
 import com.sap.expenseuploader.model.Expense;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -34,10 +36,26 @@ public class ExcelInput implements ExpenseInput
     public List<Expense> getExpenses()
         throws IOException
     {
+        if (!this.inputFile.exists()) {
+            throw new IOException("Excel file does not exist: " + this.inputFile.getAbsolutePath());
+        }
+
         List<Expense> expenses = new ArrayList<>();
 
-        try( FileInputStream inputStream = new FileInputStream(this.inputFile) ) {
-            Workbook workbook = new XSSFWorkbook(inputStream);
+        InputStream inputStream = null;
+        try {
+            inputStream = new FileInputStream(this.inputFile);
+            Workbook workbook;
+            try {
+                workbook = new XSSFWorkbook(inputStream);
+            }
+            catch (Exception e) { // TODO catch the real exception
+                logger.warn("Excel file of expenses is not in XLSX format, falling back to XLS");
+                e.printStackTrace();
+                inputStream.close();
+                inputStream = new FileInputStream(this.inputFile);
+                workbook = new HSSFWorkbook(inputStream);
+            }
             Sheet firstSheet = workbook.getSheetAt(0);
 
             int cellsNumber = 0;
@@ -71,6 +89,9 @@ public class ExcelInput implements ExpenseInput
                     logger.error("Error in row " + nextRow.getRowNum(), e);
                 }
             }
+        }
+        finally {
+            inputStream.close();
         }
         return expenses;
     }

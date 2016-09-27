@@ -7,6 +7,7 @@ import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.io.File;
@@ -39,7 +40,7 @@ public class ExcelOutput implements ExpenseOutput
         logger.info("Writing expenses to excel file " + this.outputFile.getAbsolutePath());
 
         int rowCount = 0;
-        try( final Workbook wb = new XSSFWorkbook() ) {
+        try (final Workbook wb = new SXSSFWorkbook(new XSSFWorkbook())) {
             FileOutputStream fileOut = new FileOutputStream(this.outputFile);
             Sheet sheet = wb.createSheet("Sheet");
 

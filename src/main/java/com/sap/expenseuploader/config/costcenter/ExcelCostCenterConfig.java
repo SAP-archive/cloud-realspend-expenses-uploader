@@ -17,15 +17,7 @@ import java.util.Iterator;
 
 public class ExcelCostCenterConfig extends CostCenterConfig
 {
-    private final static String COSTCENTERS_EXCEL = "config.xlsx";
-
     private final Logger logger = LogManager.getLogger(this.getClass());
-
-    public ExcelCostCenterConfig()
-            throws IOException, InvalidFormatException
-    {
-        this(COSTCENTERS_EXCEL);
-    }
 
     public ExcelCostCenterConfig(String path)
             throws InvalidFormatException, IOException
