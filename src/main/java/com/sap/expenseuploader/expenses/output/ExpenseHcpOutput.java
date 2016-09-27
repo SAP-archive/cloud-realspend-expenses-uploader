@@ -202,11 +202,7 @@ public class ExpenseHcpOutput implements ExpenseOutput
         // Create JSON payload
         Gson gson = new GsonBuilder().setDateFormat("yyyy-MM-dd").create();
         JsonArray expensesAsJson = (JsonArray) gson.toJsonTree(expenses);
-        for( JsonElement e : expensesAsJson ) {
-            // Add approver to each expense
-            JsonObject expenseAsJson = (JsonObject) e;
-            expenseAsJson.addProperty("approver", this.hcpConfig.getHcpUser());
-        }
+
         JsonObject payload = new JsonObject();
         payload.add("expenses", expensesAsJson);
         payload.addProperty("user", user);
