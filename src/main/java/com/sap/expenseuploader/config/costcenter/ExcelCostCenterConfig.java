@@ -1,5 +1,6 @@
 package com.sap.expenseuploader.config.costcenter;
 
+import com.sap.expenseuploader.Helper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
@@ -50,7 +51,7 @@ public class ExcelCostCenterConfig extends CostCenterConfig
             if (!userCostCenters.containsKey(user)) {
                 userCostCenters.put(user, new ArrayList<String>());
             }
-            userCostCenters.get(user).add(costCenter);
+            userCostCenters.get(user).add(Helper.stripLeadingZeros(costCenter));
 
             if (!costCenterUsers.containsKey(costCenter)) {
                 costCenterUsers.put(costCenter, new ArrayList<String>());
