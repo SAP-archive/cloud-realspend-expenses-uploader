@@ -1,6 +1,7 @@
 package com.sap.expenseuploader;
 
 import org.apache.commons.codec.binary.Base64;
+import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.json.simple.parser.ParseException;
 import org.junit.Test;
 
@@ -14,8 +15,15 @@ public class IntegrationTest {
 
     @Test
     public void testAgainstTrialInstance()
-            throws RoleNotFoundException, ParseException, IOException, org.apache.commons.cli.ParseException,
-            URISyntaxException, java.text.ParseException {
+        throws
+        RoleNotFoundException,
+        ParseException,
+        IOException,
+        org.apache.commons.cli.ParseException,
+        URISyntaxException,
+        java.text.ParseException,
+        InvalidFormatException
+    {
 
         String[] args = {
             "--from",               "20150301",
@@ -28,7 +36,8 @@ public class IntegrationTest {
             "--hcp_user",           "your username here",
             "--hcp_password",       new String(Base64.decodeBase64("your password in base64 here".getBytes())),
             "--hcp_proxy",          "proxy.wdf.sap.corp:8080",
-            "--budgets"
+            "--budgets",
+            "--resume"
         };
 
         ExpenseUploader.main(args);

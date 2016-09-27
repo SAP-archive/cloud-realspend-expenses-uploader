@@ -1,8 +1,11 @@
 # Expense Uploader TODOs
 
+- TODO change in readme.md
+
 EXPENSES:
 ---------
 - test whether correct users receive correct expenses based on the assigned cost centers
+    * done
 
 - test whether date range is correctly applied during expense import
 
@@ -36,12 +39,12 @@ EXPENSES:
 
 - test invalid values of mandatory and optional properties of line items (e.g. date like 9999-99-99 or empty string etc.) -> error code?
 	* for invalid date (9999-99-99):
+		- Now the tool expense uploader has a small validation for the date and it prints:
+            * The inserted date 9999-99-99 is unparseable. Please enter a valid date in the correct date format yyyy-MM-dd. E.g. 2015-04-29
 		- the response received from Realspend is:
 			* status code: 500
 			* body:
 			    ```Error is: {"error":"unexpected_error"}```
-		- Now the tool expense uploader has a small validation for the date and it prints:
-		    * The inserted date 9999-99-99 is unparseable. Please enter a valid date in the correct date format yyyy-MM-dd. E.g. 2015-04-29
 	* for invalid currency "EUROOO":
 		- there was no error received from realspend. this is fine?
 	* for invalid amount "878sdfdf":
