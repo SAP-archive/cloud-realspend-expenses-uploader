@@ -9,7 +9,6 @@ import org.apache.http.util.EntityUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import javax.management.relation.RoleNotFoundException;
 import java.io.IOException;
 import java.net.URISyntaxException;
 
@@ -85,21 +84,18 @@ public class HcpConfig
 
     /**
      * Fetches a CSRF token from RealSpend and authenticates.
-     *
-     * @return CSRF token
-     * @throws URISyntaxException
-     * @throws IOException
-     * @throws RoleNotFoundException
      */
     public String getCsrfToken()
-        throws URISyntaxException, IOException, RoleNotFoundException
+        throws
+        IOException,
+        URISyntaxException
     {
         // Currently the caching is disabled, the token is refetched every time
         return fetchCsrfToken();
     }
 
     private String fetchCsrfToken()
-        throws IOException, URISyntaxException, RoleNotFoundException
+        throws IOException, URISyntaxException
     {
         URIBuilder uriBuilder = new URIBuilder(getHcpUrl() + "/rest/csrf");
         Request request = Request.Get(uriBuilder.build())
@@ -109,8 +105,7 @@ public class HcpConfig
         Header responseCsrfHeader = response.getFirstHeader("x-csrf-token");
         // FIXME: Show more info if request fails (HTTP status line + body)
         if( responseCsrfHeader == null ) {
-            throw new RoleNotFoundException("Provided username: \'" + getHcpUser()
-                + "\' is not authorized to perform http requests to HCP or wrong username/password provided.");
+            throw new RuntimeException("Failed to fetch CSRF token.");
         }
         String result = responseCsrfHeader.getValue();
         logger.debug("Fetched CSRF token " + result);
