@@ -39,7 +39,8 @@ public class ExcelOutput implements ExpenseOutput
         logger.info("Writing expenses to excel file " + this.outputFile.getAbsolutePath());
 
         int rowCount = 0;
-        try( final Workbook wb = new XSSFWorkbook() ) {
+        try {
+            final Workbook wb = new XSSFWorkbook();
             FileOutputStream fileOut = new FileOutputStream(this.outputFile);
             Sheet sheet = wb.createSheet("Sheet");
 
