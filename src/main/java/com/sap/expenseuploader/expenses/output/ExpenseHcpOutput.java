@@ -47,7 +47,7 @@ public class ExpenseHcpOutput implements ExpenseOutput
     @Override
     public void putExpenses( List<Expense> expenses )
     {
-        logger.info("Writing expenses to HCP at " + this.hcpConfig.getHcpUrl());
+        logger.info("Writing expenses to HCP at " + this.hcpConfig.getHcpUrl() + "...");
 
         try {
 
@@ -127,7 +127,7 @@ public class ExpenseHcpOutput implements ExpenseOutput
                 // this means we have failed requests from before, we should resume
                 if( resumeFlagSet ) {
                     // resume the previous upload
-                    logger.info("Resuming the previous upload by retrying failed requests..");
+                    logger.info("Resuming the previous upload by retrying failed requests...");
                     // TODO compare the hashcode of config. Resume if the same. Fail otherwise.
                     for( String filename : failedRequestFilenames ) {
                         String batchName = filename.substring(0, filename.lastIndexOf("_"));
@@ -170,7 +170,7 @@ public class ExpenseHcpOutput implements ExpenseOutput
     {
         try {
             if( Files.exists(REQ_DUMP_FOLDER) ) {
-                logger.info("Deleting old request folder");
+                logger.info("Deleting old request folder..");
                 Files.walkFileTree(REQ_DUMP_FOLDER, new SimpleFileVisitor<Path>()
                 {
                     @Override
@@ -216,7 +216,7 @@ public class ExpenseHcpOutput implements ExpenseOutput
             .addHeader("x-csrf-token", this.hcpConfig.getCsrfToken())
             .bodyString(payload.toString(), ContentType.APPLICATION_JSON);
 
-        logger.info(String.format("Posting %s expenses for user %s", expenses.size(), user));
+        logger.info(String.format("Posting %s expenses for user %s...", expenses.size(), user));
 
         final long start = System.currentTimeMillis();
         HttpResponse response = this.hcpConfig.withOptionalProxy(request).execute().returnResponse();
@@ -245,7 +245,7 @@ public class ExpenseHcpOutput implements ExpenseOutput
         throws URISyntaxException, IOException
     {
         // Upload
-        logger.info("Re-uploading the request stored in file " + batchName + ".json");
+        logger.info("Re-uploading the request stored in file " + batchName + ".json ...");
         URIBuilder uriBuilder = new URIBuilder(this.hcpConfig.getHcpUrl() + "/rest/expense");
         Request request = Request.Post(uriBuilder.build())
             .addHeader("x-csrf-token", csrfToken)

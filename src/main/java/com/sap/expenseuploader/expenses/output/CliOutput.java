@@ -23,7 +23,7 @@ public class CliOutput implements ExpenseOutput
     @Override
     public void putExpenses( List<Expense> expenses )
     {
-        logger.info("Writing expenses to command line");
+        logger.info("Writing expenses to command line ...");
 
         for( Expense expense : expenses ) {
             Gson gson = new GsonBuilder().setDateFormat("yyyy-MM-dd").create();

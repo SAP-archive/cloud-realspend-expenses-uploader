@@ -89,41 +89,34 @@ public class ExpenseUploader
 
         // Look for config file
         String configPath = DEFAULT_CONFIG_PATH;
-        if (cmd.hasOption("c")) {
+        if( cmd.hasOption("c") ) {
             configPath = cmd.getOptionValue("c");
         }
         File configFile = new File(configPath);
-        if (!configFile.exists() || configFile.isDirectory()) {
+        if( !configFile.exists() || configFile.isDirectory() ) {
             logger.error("Unable to find configuration file at " + configFile.getAbsolutePath());
             System.exit(1);
         }
 
         // Prepare HCP config
         HcpConfig hcpConfig = null;
-        if (cmd.hasOption("url")) {
-            hcpConfig = new HcpConfig(
-                cmd.getOptionValue("url"),
+        if( cmd.hasOption("url") ) {
+            hcpConfig = new HcpConfig(cmd.getOptionValue("url"),
                 cmd.getOptionValue("user"),
                 cmd.getOptionValue("pass"),
                 cmd.getOptionValue("x"),
-                cmd.hasOption("r")
-            );
+                cmd.hasOption("r"));
         }
 
         // Prepare config for expenses, create inputs and outputs
         ExpenseInput expenseInput = null;
         List<ExpenseOutput> expenseOutputs = new ArrayList<>();
         if( cmd.hasOption("in_erp") ) {
-            expenseInput = new ErpInput(
-                new ExpenseInputConfig(
-                    cmd.getOptionValue("in_erp"),
-                    cmd.getOptionValue("ca"),
-                    cmd.getOptionValue("f"),
-                    cmd.getOptionValue("t"),
-                    cmd.getOptionValue("p")
-                ),
-                new ExcelCostCenterConfig(configPath)
-            );
+            expenseInput = new ErpInput(new ExpenseInputConfig(cmd.getOptionValue("in_erp"),
+                cmd.getOptionValue("ca"),
+                cmd.getOptionValue("f"),
+                cmd.getOptionValue("t"),
+                cmd.getOptionValue("p")), new ExcelCostCenterConfig(configPath));
         }
         if( cmd.hasOption("in_xls") ) {
             if( expenseInput != null ) {
@@ -141,12 +134,7 @@ public class ExpenseUploader
                 System.exit(1);
             }
 
-            expenseOutputs.add(
-                new ExpenseHcpOutput(
-                    hcpConfig,
-                    new ExcelCostCenterConfig(configPath)
-                )
-            );
+            expenseOutputs.add(new ExpenseHcpOutput(hcpConfig, new ExcelCostCenterConfig(configPath)));
         }
         if( cmd.hasOption("out_xls") ) {
             expenseOutputs.add(new ExcelOutput(cmd.getOptionValue("out_xls")));
@@ -189,10 +177,7 @@ public class ExpenseUploader
         logger.info("");
         if( cmd.hasOption("b") ) {
             logger.info("== Uploading Budgets ==");
-            BudgetHcpOutput budgetHcpOutput = new BudgetHcpOutput(
-                new ExcelBudgetConfig(configPath),
-                hcpConfig
-            );
+            BudgetHcpOutput budgetHcpOutput = new BudgetHcpOutput(new ExcelBudgetConfig(configPath), hcpConfig);
             budgetHcpOutput.putBudgets();
         } else {
             logger.info("No budgets will be uploaded! Consider using the option 'budgets' if they are required.");

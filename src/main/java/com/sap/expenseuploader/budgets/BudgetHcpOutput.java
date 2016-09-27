@@ -66,7 +66,7 @@ public class BudgetHcpOutput
 
         for( String user : budgetConfig.getBudgetUserList() ) {
 
-            logger.info("Uploading budgets for tags of user " + user);
+            logger.info("Uploading budgets for tags of user " + user + " ...");
 
             // Upload tag budgets
             Map<String, Map<String, List<BudgetEntry>>> userTagGroups = budgetConfig.getTagBudgetsOfUser(user);
@@ -75,7 +75,7 @@ public class BudgetHcpOutput
                 putTagBudgets(userTagGroup, user, entries);
             }
 
-            logger.info("Uploading budgets for master data of user " + user);
+            logger.info("Uploading budgets for master data of user " + user + " ...");
 
             Map<String, List<BudgetEntry>> masterDataBudgets;
 
@@ -143,17 +143,18 @@ public class BudgetHcpOutput
         }
     }
 
-    private void putOverallBudgets(String user, List<BudgetEntry> entries) throws URISyntaxException, IOException
+    private void putOverallBudgets( String user, List<BudgetEntry> entries )
+        throws URISyntaxException, IOException
     {
         if( entries.isEmpty() ) {
-            logger.debug("No overall budgets to put ...");
+            logger.debug("No overall budgets to put");
             return;
         }
 
         JsonObject payload = new JsonObject();
         payload.addProperty("user", user);
         JsonArray budgets = new JsonArray();
-        for (BudgetEntry entry: entries) {
+        for( BudgetEntry entry : entries ) {
             JsonObject budget = new JsonObject();
             budget.addProperty("amount", entry.amount);
             budget.addProperty("currency", entry.currency);
@@ -180,9 +181,9 @@ public class BudgetHcpOutput
             logger.debug("Payload was: " + payload.toString());
         } else {
             logger.error(String.format("Got http code %s while uploading %s tag budget(s) for user %s",
-                    statusCode,
-                    entries.size(),
-                    user));
+                statusCode,
+                entries.size(),
+                user));
             logger.error("URL was: " + uriBuilder.build());
             logger.error("Payload was: " + payload.toString());
             logger.error("Error is: " + getBodyFromResponse(response));
@@ -193,7 +194,7 @@ public class BudgetHcpOutput
         throws URISyntaxException, IOException, RoleNotFoundException, ParseException
     {
         if( entries.isEmpty() ) {
-            logger.debug("No tag budgets to put ...");
+            logger.debug("No tag budgets to put");
             return;
         }
 
@@ -216,7 +217,7 @@ public class BudgetHcpOutput
             }
         }
         if( budgets.size() == 0 ) {
-            logger.debug("Nothing to do here ...");
+            logger.debug("No budgets to upload.");
             return;
         }
         payload.add("budgets", budgets);
@@ -253,7 +254,7 @@ public class BudgetHcpOutput
             this.tagGroupIds.put(tagGroupName.toLowerCase(), tagGroupID);
             this.tagNameIds.put(tagGroupName.toLowerCase(), new HashMap<String, Long>());
         }
-        
+
         // creating the new tag
         if( !this.tagNameIds.get(tagGroupName.toLowerCase()).containsKey(tagName.toLowerCase()) ) {
             long tagID = createTag(tagGroupName, tagName);
@@ -278,7 +279,7 @@ public class BudgetHcpOutput
     private long createTag( String tagGroupName, String tagName )
         throws URISyntaxException, IOException, RoleNotFoundException, ParseException
     {
-        logger.info("creating the tag " + tagName + " that belongs to group " + tagGroupName);
+        logger.info("creating the tag " + tagName + " that belongs to group " + tagGroupName + " ...");
 
         // example:
         // {
@@ -328,7 +329,7 @@ public class BudgetHcpOutput
     private long createTagGroup( String tagGroupName )
         throws URISyntaxException, IOException, RoleNotFoundException, ParseException
     {
-        logger.info("creating the new tag group (dimension) " + tagGroupName);
+        logger.info("creating the new tag group (dimension) " + tagGroupName + " ...");
         // example:
         // {
         //   "dimensions": [
@@ -364,7 +365,7 @@ public class BudgetHcpOutput
         throws URISyntaxException, IOException, RoleNotFoundException
     {
         if( entries.isEmpty() ) {
-            logger.debug("Nothing to do for endpoint " + endpoint + " ...");
+            logger.debug("Nothing to do for endpoint " + endpoint);
             return;
         }
 

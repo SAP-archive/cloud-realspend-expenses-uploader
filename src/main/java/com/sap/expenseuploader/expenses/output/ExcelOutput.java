@@ -36,7 +36,7 @@ public class ExcelOutput implements ExpenseOutput
     @Override
     public void putExpenses( List<Expense> expenses )
     {
-        logger.info("Writing expenses to excel file " + this.outputFile.getAbsolutePath());
+        logger.info("Writing expenses to excel file " + this.outputFile.getAbsolutePath() + " ...");
 
         int rowCount = 0;
 
