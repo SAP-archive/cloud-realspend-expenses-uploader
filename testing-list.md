@@ -14,10 +14,13 @@ EXPENSES:
 - test behavior if ERP is not reachable (wrong config)
 
 - test if merging of expenses works correctly (double import etc.)
+    * implemented with using resume functionality 
 
 - test whether BAPI import and export to Excel via tool works with large data and invalid data
+    * done
 
 - test whether BAPI import and export to HCP via tool works with large data and invalid data
+    * done
 
 - ensure to refetch CSRF token
     * it's now fetched for each post/put request
@@ -41,10 +44,6 @@ EXPENSES:
 	* for invalid date (9999-99-99):
 		- Now the tool expense uploader has a small validation for the date and it prints:
             * The inserted date 9999-99-99 is unparseable. Please enter a valid date in the correct date format yyyy-MM-dd. E.g. 2015-04-29
-		- the response received from Realspend is:
-			* status code: 500
-			* body:
-			    ```Error is: {"error":"unexpected_error"}```
 	* for invalid currency "EUROOO":
 		- there was no error received from realspend. this is fine?
 	* for invalid amount "878sdfdf":
@@ -72,6 +71,7 @@ BUDGETS:
 --------
 
 - test overwrite of budget
+    * done
 
 - tool should create missing tags (test missing tags or master data)
 	* done
