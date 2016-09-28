@@ -161,8 +161,8 @@ public class ExpenseUploader
         // Do the work
         // 1: Upload expenses
         if( expenseInput != null ) {
-            logger.info("");
             List<Expense> expenses = expenseInput.getExpenses();
+            logger.info("");
             if( expenses == null || expenses.size() == 0 ) {
                 logger.info("No expenses found in the given input source!");
             } else {

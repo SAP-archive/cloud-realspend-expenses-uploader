@@ -9,9 +9,7 @@ import com.sap.expenseuploader.model.Expense;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 /**
  * Reads expenses from the ERP system, whose configurations should be stored
@@ -19,7 +17,6 @@ import java.util.List;
  */
 public class ErpInput implements ExpenseInput
 {
-    private static final String ABAP_SYS_NAME = "SYSTEM";
     private static final String BAPI_NAME = "BAPI_ACC_CO_DOCUMENT_FIND";
     private static final String DOC_HEADER_TABLE = "DOC_HEADERS";
     private static final String LINE_ITEMS_TABLE = "LINE_ITEMS";
@@ -75,16 +72,29 @@ public class ErpInput implements ExpenseInput
             table.setValue("LOW", expenseInputConfig.getFromTime());
             table.setValue("HIGH", expenseInputConfig.getToTime());
 
+            // Check cost centers
+            Set<String> erpCostCenters = Helper.getErpCostCenters(expenseInputConfig);
+
             // Add all cost centers to the query
+            boolean anyCostCenterExistsInErp = false;
             for( String costCenter : costCenterConfig.getCostCenterList() ) {
+                if (erpCostCenters.contains(costCenter)) {
+                    anyCostCenterExistsInErp = true;
+                }
                 table.appendRow();
                 table.setValue("FIELD", "KOSTL");
                 table.setValue("SIGN", "I");
                 table.setValue("OPTION", "EQ");
                 table.setValue("LOW", costCenter);
             }
-
-            logger.info("Will read data from ERP for cost centers " + costCenterConfig.getCostCenterList().toString());
+            if (anyCostCenterExistsInErp) {
+                logger.info("Will read data from ERP for cost centers " +
+                    costCenterConfig.getCostCenterList().toString());
+            } else {
+                logger.error("None of these cost centers exist in the ERP: " +
+                    costCenterConfig.getCostCenterList().toString());
+                return Collections.emptyList();
+            }
 
             // Execute BAPI
             bapiAccCoDocFind.execute(destination);
