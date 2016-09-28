@@ -2,8 +2,8 @@ package com.sap.expenseuploader.expenses.input;
 
 import com.sap.conn.jco.*;
 import com.sap.expenseuploader.Helper;
-import com.sap.expenseuploader.config.costcenter.CostCenterConfig;
 import com.sap.expenseuploader.config.ExpenseInputConfig;
+import com.sap.expenseuploader.config.costcenter.CostCenterConfig;
 import com.sap.expenseuploader.model.ControllingDocumentData;
 import com.sap.expenseuploader.model.Expense;
 import org.apache.logging.log4j.LogManager;
@@ -72,13 +72,13 @@ public class ErpInput implements ExpenseInput
             table.setValue("LOW", expenseInputConfig.getFromTime());
             table.setValue("HIGH", expenseInputConfig.getToTime());
 
-            // Check cost centers
+            // Check the existence of the config cost centers in the erp
             Set<String> erpCostCenters = Helper.getErpCostCenters(expenseInputConfig);
 
             // Add all cost centers to the query
             boolean anyCostCenterExistsInErp = false;
             for( String costCenter : costCenterConfig.getCostCenterList() ) {
-                if (erpCostCenters.contains(costCenter)) {
+                if( erpCostCenters.contains(costCenter) ) {
                     anyCostCenterExistsInErp = true;
                 }
                 table.appendRow();
@@ -87,12 +87,12 @@ public class ErpInput implements ExpenseInput
                 table.setValue("OPTION", "EQ");
                 table.setValue("LOW", costCenter);
             }
-            if (anyCostCenterExistsInErp) {
-                logger.info("Will read data from ERP for cost centers " +
-                    costCenterConfig.getCostCenterList().toString());
+            if( anyCostCenterExistsInErp ) {
+                logger.info(
+                    "Will read data from ERP for cost centers " + costCenterConfig.getCostCenterList().toString());
             } else {
-                logger.error("None of these cost centers exist in the ERP: " +
-                    costCenterConfig.getCostCenterList().toString());
+                logger.error(
+                    "None of these cost centers exist in the ERP: " + costCenterConfig.getCostCenterList().toString());
                 return Collections.emptyList();
             }
 
@@ -149,7 +149,7 @@ public class ErpInput implements ExpenseInput
             }
         }
         catch( JCoException e ) {
-            logger.error("There was a problem downloading data from the ERP!");
+            logger.error("There was a problem downloading data from the ERP! Please check your jcoDestination file.");
             e.printStackTrace();
             return null;
         }

@@ -1,6 +1,4 @@
-# Expense Uploader TODOs
-
-- TODO change in readme.md
+# Expense Uploader TESTS
 
 EXPENSES:
 ---------
@@ -12,6 +10,7 @@ EXPENSES:
 - test invalid date range
 
 - test behavior if ERP is not reachable (wrong config)
+    * done 
 
 - test if merging of expenses works correctly (double import etc.)
     * implemented with using resume functionality 

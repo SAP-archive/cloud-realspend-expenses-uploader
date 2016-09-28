@@ -21,39 +21,34 @@ public class Helper
         return str.replaceFirst("^0+(?!$)", "");
     }
 
-    public static Set<String> getErpCostCenters(ExpenseInputConfig expenseInputConfig)
+    public static Set<String> getErpCostCenters( ExpenseInputConfig expenseInputConfig )
+        throws JCoException
     {
         Logger logger = LogManager.getLogger(); // TODO add class
 
-        try {
-            JCoDestination destination = expenseInputConfig.getJcoDestination();
-            JCoRepository repository = destination.getRepository();
-            JCoContext.begin(destination);
-            JCoFunction bapiCostCenterList = repository.getFunctionTemplate(COST_CENTER_BAPI_NAME).getFunction();
+        JCoDestination destination = expenseInputConfig.getJcoDestination();
+        JCoRepository repository = destination.getRepository();
+        JCoContext.begin(destination);
+        JCoFunction bapiCostCenterList = repository.getFunctionTemplate(COST_CENTER_BAPI_NAME).getFunction();
 
-            bapiCostCenterList.getImportParameterList().setValue("CONTROLLINGAREA",
-                    expenseInputConfig.getControllingArea());
+        bapiCostCenterList.getImportParameterList()
+            .setValue("CONTROLLINGAREA", expenseInputConfig.getControllingArea());
 
-            // Execute BAPI
-            bapiCostCenterList.execute(destination);
+        // Execute BAPI
+        bapiCostCenterList.execute(destination);
 
-            // Read returned table
-            JCoTable costCenterTable = bapiCostCenterList.getTableParameterList().getTable(COST_CENTER_TABLE_NAME);
-            logger.debug(String.format("Found %s cost centers for controlling area %s in the ERP",
-                    costCenterTable.getNumRows(), expenseInputConfig.getControllingArea()));
+        // Read returned table
+        JCoTable costCenterTable = bapiCostCenterList.getTableParameterList().getTable(COST_CENTER_TABLE_NAME);
+        logger.debug(String.format("Found %s cost centers for controlling area %s in the ERP",
+            costCenterTable.getNumRows(),
+            expenseInputConfig.getControllingArea()));
 
-            Set<String> result = new HashSet<>();
-            for( int i = 0; i < costCenterTable.getNumRows(); i++ ) {
-                costCenterTable.setRow(i);
-                String costCenter = costCenterTable.getString("COSTCENTER");
-                result.add(stripLeadingZeros(costCenter));
-            }
-            return result;
+        Set<String> result = new HashSet<>();
+        for( int i = 0; i < costCenterTable.getNumRows(); i++ ) {
+            costCenterTable.setRow(i);
+            String costCenter = costCenterTable.getString("COSTCENTER");
+            result.add(stripLeadingZeros(costCenter));
         }
-        catch (JCoException e) {
-            logger.error("There was a problem downloading data from the ERP!");
-            e.printStackTrace();
-            return null;
-        }
+        return result;
     }
 }
