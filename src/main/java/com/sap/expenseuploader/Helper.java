@@ -1,7 +1,7 @@
 package com.sap.expenseuploader;
 
 import com.sap.conn.jco.*;
-import com.sap.expenseuploader.config.ExpenseInputConfig;
+import com.sap.expenseuploader.config.ErpExpenseInputConfig;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -21,18 +21,18 @@ public class Helper
         return str.replaceFirst("^0+(?!$)", "");
     }
 
-    public static Set<String> getErpCostCenters( ExpenseInputConfig expenseInputConfig )
+    public static Set<String> getErpCostCenters( ErpExpenseInputConfig erpExpenseInputConfig )
         throws JCoException
     {
         Logger logger = LogManager.getLogger(); // TODO add class
 
-        JCoDestination destination = expenseInputConfig.getJcoDestination();
+        JCoDestination destination = erpExpenseInputConfig.getJcoDestination();
         JCoRepository repository = destination.getRepository();
         JCoContext.begin(destination);
         JCoFunction bapiCostCenterList = repository.getFunctionTemplate(COST_CENTER_BAPI_NAME).getFunction();
 
         bapiCostCenterList.getImportParameterList()
-            .setValue("CONTROLLINGAREA", expenseInputConfig.getControllingArea());
+            .setValue("CONTROLLINGAREA", erpExpenseInputConfig.getControllingArea());
 
         // Execute BAPI
         bapiCostCenterList.execute(destination);
@@ -41,7 +41,7 @@ public class Helper
         JCoTable costCenterTable = bapiCostCenterList.getTableParameterList().getTable(COST_CENTER_TABLE_NAME);
         logger.debug(String.format("Found %s cost centers for controlling area %s in the ERP",
             costCenterTable.getNumRows(),
-            expenseInputConfig.getControllingArea()));
+            erpExpenseInputConfig.getControllingArea()));
 
         Set<String> result = new HashSet<>();
         for( int i = 0; i < costCenterTable.getNumRows(); i++ ) {

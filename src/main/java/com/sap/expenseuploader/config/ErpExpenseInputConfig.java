@@ -12,7 +12,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
-public class ExpenseInputConfig
+public class ErpExpenseInputConfig
 {
     private final Logger logger = LogManager.getLogger(this.getClass());
 
@@ -23,7 +23,7 @@ public class ExpenseInputConfig
     private String toTime;
     private String period;
 
-    public ExpenseInputConfig( String systemName, String controllingArea, String fromTime, String toTime,
+    public ErpExpenseInputConfig( String systemName, String controllingArea, String fromTime, String toTime,
         String period )
         throws IOException, ParseException
     {

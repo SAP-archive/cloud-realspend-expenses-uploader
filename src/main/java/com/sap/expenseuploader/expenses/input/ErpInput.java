@@ -2,7 +2,7 @@ package com.sap.expenseuploader.expenses.input;
 
 import com.sap.conn.jco.*;
 import com.sap.expenseuploader.Helper;
-import com.sap.expenseuploader.config.ExpenseInputConfig;
+import com.sap.expenseuploader.config.ErpExpenseInputConfig;
 import com.sap.expenseuploader.config.costcenter.CostCenterConfig;
 import com.sap.expenseuploader.model.ControllingDocumentData;
 import com.sap.expenseuploader.model.Expense;
@@ -25,12 +25,12 @@ public class ErpInput implements ExpenseInput
 
     private final Logger logger = LogManager.getLogger(this.getClass());
 
-    ExpenseInputConfig expenseInputConfig;
+    ErpExpenseInputConfig erpExpenseInputConfig;
     CostCenterConfig costCenterConfig;
 
-    public ErpInput( ExpenseInputConfig expenseInputConfig, CostCenterConfig costCenterConfig )
+    public ErpInput( ErpExpenseInputConfig erpExpenseInputConfig, CostCenterConfig costCenterConfig )
     {
-        this.expenseInputConfig = expenseInputConfig;
+        this.erpExpenseInputConfig = erpExpenseInputConfig;
         this.costCenterConfig = costCenterConfig;
     }
 
@@ -47,7 +47,7 @@ public class ErpInput implements ExpenseInput
 
         // Get all expenses via JCO
         try {
-            JCoDestination destination = expenseInputConfig.getJcoDestination();
+            JCoDestination destination = erpExpenseInputConfig.getJcoDestination();
             JCoRepository repository = destination.getRepository();
             JCoContext.begin(destination);
             JCoFunction bapiAccCoDocFind = repository.getFunctionTemplate(BAPI_NAME).getFunction();
@@ -57,9 +57,9 @@ public class ErpInput implements ExpenseInput
 
             // Fill BAPI Imports
             JCoStructure input = bapiAccCoDocFind.getImportParameterList().getStructure(INPUT_DOCUMENT_STRUCTURE);
-            input.setValue("CO_AREA", expenseInputConfig.getControllingArea());
-            if( expenseInputConfig.hasPeriod() ) {
-                input.setValue("PERIOD", expenseInputConfig.getPeriod());
+            input.setValue("CO_AREA", erpExpenseInputConfig.getControllingArea());
+            if( erpExpenseInputConfig.hasPeriod() ) {
+                input.setValue("PERIOD", erpExpenseInputConfig.getPeriod());
             }
 
             JCoTable table = bapiAccCoDocFind.getTableParameterList().getTable(SELECT_CRITERIA_TABLE);
@@ -69,11 +69,11 @@ public class ErpInput implements ExpenseInput
             table.setValue("FIELD", "POSTGDATE");
             table.setValue("SIGN", "I");
             table.setValue("OPTION", "BT");
-            table.setValue("LOW", expenseInputConfig.getFromTime());
-            table.setValue("HIGH", expenseInputConfig.getToTime());
+            table.setValue("LOW", erpExpenseInputConfig.getFromTime());
+            table.setValue("HIGH", erpExpenseInputConfig.getToTime());
 
             // Check the existence of the config cost centers in the erp
-            Set<String> erpCostCenters = Helper.getErpCostCenters(expenseInputConfig);
+            Set<String> erpCostCenters = Helper.getErpCostCenters(erpExpenseInputConfig);
 
             // Add all cost centers to the query
             boolean anyCostCenterExistsInErp = false;

@@ -1,7 +1,7 @@
 package com.sap.expenseuploader;
 
 import com.sap.expenseuploader.budgets.BudgetHcpOutput;
-import com.sap.expenseuploader.config.ExpenseInputConfig;
+import com.sap.expenseuploader.config.ErpExpenseInputConfig;
 import com.sap.expenseuploader.config.HcpConfig;
 import com.sap.expenseuploader.config.budget.ExcelBudgetConfig;
 import com.sap.expenseuploader.config.costcenter.ExcelCostCenterConfig;
@@ -113,7 +113,7 @@ public class ExpenseUploader
         ExcelCostCenterConfig excelCostCenterConfig = new ExcelCostCenterConfig(configPath);
         List<ExpenseOutput> expenseOutputs = new ArrayList<>();
         if( cmd.hasOption("in_erp") ) {
-            expenseInput = new ErpInput(new ExpenseInputConfig(cmd.getOptionValue("in_erp"),
+            expenseInput = new ErpInput(new ErpExpenseInputConfig(cmd.getOptionValue("in_erp"),
                 cmd.getOptionValue("ca"),
                 cmd.getOptionValue("f"),
                 cmd.getOptionValue("t"),

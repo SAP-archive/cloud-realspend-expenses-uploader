@@ -2,7 +2,7 @@ package com.sap.expenseuploader;
 
 import com.sap.conn.jco.JCoDestinationManager;
 import com.sap.conn.jco.JCoException;
-import com.sap.expenseuploader.config.ExpenseInputConfig;
+import com.sap.expenseuploader.config.ErpExpenseInputConfig;
 import com.sap.expenseuploader.config.costcenter.CostCenterConfig;
 import com.sap.expenseuploader.expenses.input.ExcelInput;
 import com.sap.expenseuploader.expenses.output.ExcelOutput;
@@ -25,7 +25,7 @@ public class ExpenseUploaderTest
     public void testErpInput()
         throws JCoException
     {
-        ExpenseInputConfig eInConfig = mock(ExpenseInputConfig.class);
+        ErpExpenseInputConfig eInConfig = mock(ErpExpenseInputConfig.class);
         when(eInConfig.getJcoDestination()).thenReturn(JCoDestinationManager.getDestination("SYSTEM"));
         when(eInConfig.getFromTime()).thenReturn("20120101");
         when(eInConfig.getToTime()).thenReturn("20170101");
