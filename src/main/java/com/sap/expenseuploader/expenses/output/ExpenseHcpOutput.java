@@ -55,7 +55,6 @@ public class ExpenseHcpOutput implements ExpenseOutput
         logger.info("Writing expenses to HCP at " + this.hcpConfig.getHcpUrl() + "...");
 
         try {
-
             // in case the resume function was performed then we don't upload anything new
             boolean uploadNormally = checkRequestFolderForResume(this.hcpConfig.isResumeSet());
 
@@ -80,7 +79,7 @@ public class ExpenseHcpOutput implements ExpenseOutput
                     // split userExpenses into batches if needed
                     if( userExpenses.size() > MAX_BATCH_SIZE ) {
                         int batchCounter = 1;
-                        while( batchCounter * MAX_BATCH_SIZE < userExpenses.size() ) {
+                        while( (batchCounter - 1) * MAX_BATCH_SIZE < userExpenses.size() ) {
                             int fromIndex = (batchCounter - 1) * MAX_BATCH_SIZE;
                             int toIndex = Math.min(batchCounter * MAX_BATCH_SIZE, userExpenses.size());
                             uploadBatchExpenses(userExpenses.subList(fromIndex, toIndex),
