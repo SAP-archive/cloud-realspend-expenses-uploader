@@ -80,7 +80,7 @@ public class ExpenseHcpOutput implements ExpenseOutput
                         int batchCounter = 1;
                         while( batchCounter * MAX_BATCH_SIZE < userExpenses.size() ) {
                             int fromIndex = (batchCounter - 1) * MAX_BATCH_SIZE;
-                            int toIndex = Math.max(batchCounter * MAX_BATCH_SIZE, userExpenses.size());
+                            int toIndex = Math.min(batchCounter * MAX_BATCH_SIZE, userExpenses.size());
                             uploadBatchExpenses(userExpenses.subList(fromIndex, toIndex),
                                 user,
                                 this.hcpConfig.getCsrfToken(),
