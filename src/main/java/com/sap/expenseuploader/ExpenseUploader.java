@@ -23,6 +23,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -162,10 +163,18 @@ public class ExpenseUploader
         // Do the work
         // 1: Upload expenses
         if( expenseInput != null ) {
-            List<Expense> expenses = expenseInput.getExpenses();
+            List<Expense> expenses = Collections.emptyList();
+            // in case resume functionality is required, don't read expenses from the input sources
+            if( !cmd.hasOption("r") ) {
+                expenses = expenseInput.getExpenses();
+            } else {
+                logger.warn(
+                    "Resume was specified, will not read expenses from input source. Rather, the expenses will be read from one of the json files in the 'requests' folder.");
+            }
+
             logger.info("");
-            if( expenses == null || expenses.size() == 0 ) {
-                logger.info("No expenses found in the given input source!");
+            if( !cmd.hasOption("r") && (expenses == null || expenses.size() == 0) ) {
+                logger.info("No expenses to upload!");
             } else {
                 logger.info("== Uploading Expenses ==");
                 for( ExpenseOutput output : expenseOutputs ) {
