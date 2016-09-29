@@ -55,18 +55,15 @@ public class ExpenseHcpOutput implements ExpenseOutput
         logger.info("Writing expenses to HCP at " + this.hcpConfig.getHcpUrl() + "...");
 
         try {
-            // In case the resume function was performed then we don't upload anything new
-            boolean hasPerformedResume = maybePerformResume(this.hcpConfig.isResumeSet());
+            // Check if we should resume an upload from earlier
+            boolean hasPerformedResume = maybePerformResume();
 
             if (hasPerformedResume) {
                 // Don't put expenses, the resume was enough
                 return;
             }
 
-            // Used to count batches
-            long batchID = 0;
-
-            // Upload
+            // Upload the given expenses
             for( String user : this.costCenterConfig.getUserList() ) {
                 List<String> costCenters = this.costCenterConfig.getCostCenters(user);
                 List<Expense> userExpenses = new ArrayList<>();
@@ -86,7 +83,7 @@ public class ExpenseHcpOutput implements ExpenseOutput
                     int toIndex = Math.min(batchCounter * MAX_BATCH_SIZE, userExpenses.size());
                     uploadBatchExpenses(userExpenses.subList(fromIndex, toIndex),
                         user,
-                        ++batchID);
+                        batchCounter);
                     batchCounter++;
                 }
             }
@@ -99,13 +96,12 @@ public class ExpenseHcpOutput implements ExpenseOutput
     /**
      * checks the request folder if it contains any failed requests
      *
-     * @param resumeFlagSet the value of resume flag (whether it's set or not)
      * @return returns true if there's no resume required, and false otherwise
      * @throws RoleNotFoundException
      * @throws IOException
      * @throws URISyntaxException
      */
-    private boolean maybePerformResume( boolean resumeFlagSet )
+    private boolean maybePerformResume()
         throws RoleNotFoundException, IOException, URISyntaxException
     {
         if( !Files.exists(REQ_DUMP_FOLDER) ) {
@@ -127,7 +123,7 @@ public class ExpenseHcpOutput implements ExpenseOutput
 
         if( failedRequestFilenames.length == 0 ) {
             // In case resume function is set in the cmd options, but it's not required
-            if( resumeFlagSet ) {
+            if( this.hcpConfig.isResumeSet() ) {
                 logger.info("The previous expense uploading run was successful, no resume is required.");
             }
 
@@ -137,7 +133,7 @@ public class ExpenseHcpOutput implements ExpenseOutput
         }
 
         // This means we have failed requests from before, we should resume
-        if( !resumeFlagSet ) {
+        if( !this.hcpConfig.isResumeSet() ) {
             // In case resume is not set but the previous run wasn't successful. -> Force the user to use it
             logger.error(
                     "There are failed requests from a previous run. Either delete them or resume their upload by setting the 'resume' flag.");
@@ -155,7 +151,7 @@ public class ExpenseHcpOutput implements ExpenseOutput
             }
             String payloadString = new String(Files.readAllBytes(fullBatchFilepath));
             if( reUploadRequest(payloadString, batchName) ) {
-                // deleting the file with failed response in it
+                // Deleting the file with failed response in it
                 Files.delete(Paths.get(REQ_DUMP_FOLDER.toString(), filename));
                 logger.info(
                     "Expenses stored in file " + fullBatchFilepath + " were successfully uploaded.");
@@ -169,7 +165,7 @@ public class ExpenseHcpOutput implements ExpenseOutput
     {
         try {
             if( Files.exists(REQ_DUMP_FOLDER) ) {
-                logger.info("Deleting old request folder..");
+                logger.info("Deleting the old 'requests' folder ...");
                 Files.walkFileTree(REQ_DUMP_FOLDER, new SimpleFileVisitor<Path>()
                 {
                     @Override
@@ -219,7 +215,7 @@ public class ExpenseHcpOutput implements ExpenseOutput
             .addHeader("x-csrf-token", this.hcpConfig.getCsrfToken())
             .bodyString(payload.toString(), ContentType.APPLICATION_JSON);
 
-        logger.info(String.format("Posting %s expenses for user %s...", expenses.size(), user));
+        logger.info(String.format("Posting %s expenses for user %s ...", expenses.size(), user));
 
         final long start = System.currentTimeMillis();
         HttpResponse response = this.hcpConfig.withOptionalProxy(request).execute().returnResponse();
