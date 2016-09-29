@@ -60,9 +60,6 @@ public class ExpenseHcpOutput implements ExpenseOutput
             boolean uploadNormally = checkRequestFolderForResume(this.hcpConfig.isResumeSet());
 
             if( uploadNormally ) {
-                // Fetch CSRF token and authenticate
-                String csrfToken = this.hcpConfig.getCsrfToken();
-
                 // used to count batches
                 long batchID = 0;
 
@@ -88,12 +85,11 @@ public class ExpenseHcpOutput implements ExpenseOutput
                             int toIndex = Math.min(batchCounter * MAX_BATCH_SIZE, userExpenses.size());
                             uploadBatchExpenses(userExpenses.subList(fromIndex, toIndex),
                                 user,
-                                this.hcpConfig.getCsrfToken(),
                                 ++batchID);
                             batchCounter++;
                         }
                     } else {
-                        uploadBatchExpenses(userExpenses, user, csrfToken, ++batchID);
+                        uploadBatchExpenses(userExpenses, user, ++batchID);
                     }
                 }
             }
@@ -115,60 +111,62 @@ public class ExpenseHcpOutput implements ExpenseOutput
     private boolean checkRequestFolderForResume( boolean resumeFlagSet )
         throws RoleNotFoundException, IOException, URISyntaxException
     {
-        if( Files.exists(REQ_DUMP_FOLDER) ) {
-            String[] failedRequestFilenames = REQ_DUMP_FOLDER.toFile().list(new FilenameFilter()
+        if( !Files.exists(REQ_DUMP_FOLDER) ) {
+            // No resume necessary
+            return true;
+        }
+
+        String[] failedRequestFilenames = REQ_DUMP_FOLDER.toFile().list(new FilenameFilter()
+        {
+            @Override
+            public boolean accept( File dir, String name )
             {
-                @Override
-                public boolean accept( File dir, String name )
-                {
-                    if( name.contains("_") && !name.toLowerCase().endsWith("_200.json") ) {
-                        return true;
-                    }
-                    return false;
+                if( name.contains("_") && !name.toLowerCase().endsWith("_200.json") ) {
+                    return true;
                 }
-            });
+                return false;
+            }
+        });
 
-            if( failedRequestFilenames.length > 0 ) {
-                // this means we have failed requests from before, we should resume
-                if( resumeFlagSet ) {
-                    // resume the previous upload
-                    logger.info("Resuming the previous upload by retrying failed requests...");
-                    assertCurrentConfigMatches();
-                    for( String filename : failedRequestFilenames ) {
-                        String batchName = filename.substring(0, filename.lastIndexOf("_"));
-                        Path fullBatchFilepath = Paths.get(REQ_DUMP_FOLDER.toString(), batchName + ".json");
-                        if( Files.exists(fullBatchFilepath) ) {
-                            // Fetch CSRF token and authenticate
-                            String csrfToken = this.hcpConfig.getCsrfToken();
-                            String payloadString = new String(Files.readAllBytes(fullBatchFilepath));
-                            if( reUploadRequest(payloadString, csrfToken, batchName) ) {
-                                // deleting the file with failed response in it
-                                Files.delete(Paths.get(REQ_DUMP_FOLDER.toString(), filename));
-                                logger.info(
-                                    "Expenses stored in file " + fullBatchFilepath + " were successfully uploaded.");
-                            }
-                        }
-                    }
+        if( failedRequestFilenames.length == 0 ) {
+            // in case resume function is set in the cmd options, but it's not required
+            if( resumeFlagSet ) {
+                logger.info("The previous expense uploading run was successful, no resume is required.");
+            }
 
-                    return false;
-                } else {
-                    // in case resume is not set but the previous run wasn't successful. -> Force the user to use it
-                    logger.error(
-                        "There are failed requests from previous run. Either resume their upload (by setting resume flag in command line options) or delete them.");
-                    logger.error("Exiting the tool!");
-                    System.exit(1);
-                }
-            } else {
-                // in case resume function is set in the cmd options, but it's not required
-                if( resumeFlagSet ) {
-                    logger.info("The previous expense uploading run was successful, no resume is required.");
-                }
+            // no failed requests in the previous run
+            deleteRequestFolder();
+            return true;
+        }
 
-                // no failed requests in the previous run
-                deleteRequestFolder();
+        // this means we have failed requests from before, we should resume
+        if( !resumeFlagSet ) {
+            // in case resume is not set but the previous run wasn't successful. -> Force the user to use it
+            logger.error(
+                    "There are failed requests from a previous run. Either resume their upload (by setting resume flag in command line options) or delete them.");
+            logger.error("Exiting the tool!");
+            System.exit(1);
+        }
+
+        // resume the previous upload
+        logger.info("Resuming the previous upload by retrying failed requests...");
+        assertCurrentConfigMatches();
+        for( String filename : failedRequestFilenames ) {
+            String batchName = filename.substring(0, filename.lastIndexOf("_"));
+            Path fullBatchFilepath = Paths.get(REQ_DUMP_FOLDER.toString(), batchName + ".json");
+            if( !Files.exists(fullBatchFilepath) ) {
+                continue;
+            }
+            String payloadString = new String(Files.readAllBytes(fullBatchFilepath));
+            if( reUploadRequest(payloadString, batchName) ) {
+                // deleting the file with failed response in it
+                Files.delete(Paths.get(REQ_DUMP_FOLDER.toString(), filename));
+                logger.info(
+                    "Expenses stored in file " + fullBatchFilepath + " were successfully uploaded.");
             }
         }
-        return true;
+
+        return false;
     }
 
     private void deleteRequestFolder()
@@ -201,7 +199,7 @@ public class ExpenseHcpOutput implements ExpenseOutput
         }
     }
 
-    private void uploadBatchExpenses( List<Expense> expenses, String user, String csrfToken, long batchID )
+    private void uploadBatchExpenses( List<Expense> expenses, String user, long batchID )
         throws URISyntaxException, IOException, RoleNotFoundException
     {
         // Create JSON payload
@@ -250,14 +248,14 @@ public class ExpenseHcpOutput implements ExpenseOutput
         }
     }
 
-    private boolean reUploadRequest( String payloadString, String csrfToken, String batchName )
+    private boolean reUploadRequest( String payloadString, String batchName )
         throws URISyntaxException, IOException
     {
         // Upload
         logger.info("Re-uploading the request stored in file " + batchName + ".json ...");
         URIBuilder uriBuilder = new URIBuilder(this.hcpConfig.getHcpUrl() + "/rest/expense");
         Request request = Request.Post(uriBuilder.build())
-            .addHeader("x-csrf-token", csrfToken)
+            .addHeader("x-csrf-token", this.hcpConfig.getCsrfToken())
             .bodyString(payloadString, ContentType.APPLICATION_JSON);
         HttpResponse response = this.hcpConfig.withOptionalProxy(request).execute().returnResponse();
 
