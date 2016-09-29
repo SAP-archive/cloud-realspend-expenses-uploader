@@ -55,41 +55,39 @@ public class ExpenseHcpOutput implements ExpenseOutput
         logger.info("Writing expenses to HCP at " + this.hcpConfig.getHcpUrl() + "...");
 
         try {
-            // in case the resume function was performed then we don't upload anything new
-            boolean uploadNormally = checkRequestFolderForResume(this.hcpConfig.isResumeSet());
+            // In case the resume function was performed then we don't upload anything new
+            boolean hasPerformedResume = maybePerformResume(this.hcpConfig.isResumeSet());
 
-            if( uploadNormally ) {
-                // used to count batches
-                long batchID = 0;
+            if (hasPerformedResume) {
+                // Don't put expenses, the resume was enough
+                return;
+            }
 
-                // Upload
-                for( String user : this.costCenterConfig.getUserList() ) {
-                    List<String> costCenters = this.costCenterConfig.getCostCenters(user);
-                    List<Expense> userExpenses = new ArrayList<>();
-                    for( Expense expense : expenses ) {
-                        if( expense.isInCostCenter(costCenters) ) {
-                            userExpenses.add(expense);
-                        }
-                    }
-                    if( userExpenses.isEmpty() ) {
-                        logger.info("No expenses to put for user " + user);
-                        continue;
-                    }
+            // Used to count batches
+            long batchID = 0;
 
-                    // split userExpenses into batches if needed
-                    if( userExpenses.size() > MAX_BATCH_SIZE ) {
-                        int batchCounter = 1;
-                        while( (batchCounter - 1) * MAX_BATCH_SIZE < userExpenses.size() ) {
-                            int fromIndex = (batchCounter - 1) * MAX_BATCH_SIZE;
-                            int toIndex = Math.min(batchCounter * MAX_BATCH_SIZE, userExpenses.size());
-                            uploadBatchExpenses(userExpenses.subList(fromIndex, toIndex),
-                                user,
-                                ++batchID);
-                            batchCounter++;
-                        }
-                    } else {
-                        uploadBatchExpenses(userExpenses, user, ++batchID);
+            // Upload
+            for( String user : this.costCenterConfig.getUserList() ) {
+                List<String> costCenters = this.costCenterConfig.getCostCenters(user);
+                List<Expense> userExpenses = new ArrayList<>();
+                for( Expense expense : expenses ) {
+                    if( expense.isInCostCenter(costCenters) ) {
+                        userExpenses.add(expense);
                     }
+                }
+                if( userExpenses.isEmpty() ) {
+                    logger.info("No expenses to put for user " + user);
+                    continue;
+                }
+
+                int batchCounter = 1;
+                while( (batchCounter - 1) * MAX_BATCH_SIZE < userExpenses.size() ) {
+                    int fromIndex = (batchCounter - 1) * MAX_BATCH_SIZE;
+                    int toIndex = Math.min(batchCounter * MAX_BATCH_SIZE, userExpenses.size());
+                    uploadBatchExpenses(userExpenses.subList(fromIndex, toIndex),
+                        user,
+                        ++batchID);
+                    batchCounter++;
                 }
             }
         }
@@ -107,12 +105,12 @@ public class ExpenseHcpOutput implements ExpenseOutput
      * @throws IOException
      * @throws URISyntaxException
      */
-    private boolean checkRequestFolderForResume( boolean resumeFlagSet )
+    private boolean maybePerformResume( boolean resumeFlagSet )
         throws RoleNotFoundException, IOException, URISyntaxException
     {
         if( !Files.exists(REQ_DUMP_FOLDER) ) {
             // No resume necessary
-            return true;
+            return false;
         }
 
         String[] failedRequestFilenames = REQ_DUMP_FOLDER.toFile().list(new FilenameFilter()
@@ -128,26 +126,25 @@ public class ExpenseHcpOutput implements ExpenseOutput
         });
 
         if( failedRequestFilenames.length == 0 ) {
-            // in case resume function is set in the cmd options, but it's not required
+            // In case resume function is set in the cmd options, but it's not required
             if( resumeFlagSet ) {
                 logger.info("The previous expense uploading run was successful, no resume is required.");
             }
 
-            // no failed requests in the previous run
+            // No failed requests in the previous run
             deleteRequestFolder();
-            return true;
+            return false;
         }
 
-        // this means we have failed requests from before, we should resume
+        // This means we have failed requests from before, we should resume
         if( !resumeFlagSet ) {
-            // in case resume is not set but the previous run wasn't successful. -> Force the user to use it
+            // In case resume is not set but the previous run wasn't successful. -> Force the user to use it
             logger.error(
-                    "There are failed requests from a previous run. Either resume their upload (by setting resume flag in command line options) or delete them.");
-            logger.error("Exiting the tool!");
+                    "There are failed requests from a previous run. Either delete them or resume their upload by setting the 'resume' flag.");
             System.exit(1);
         }
 
-        // resume the previous upload
+        // Resume the previous upload
         logger.info("Resuming the previous upload by retrying failed requests...");
         assertCurrentConfigMatches();
         for( String filename : failedRequestFilenames ) {
@@ -165,7 +162,7 @@ public class ExpenseHcpOutput implements ExpenseOutput
             }
         }
 
-        return false;
+        return true;
     }
 
     private void deleteRequestFolder()
@@ -233,7 +230,7 @@ public class ExpenseHcpOutput implements ExpenseOutput
         // Check response
         int statusCode = response.getStatusLine().getStatusCode();
         if( statusCode == 200 ) {
-            logger.info(String.format("Successfully uploaded %s expenses for user %s (took %s sec)",
+            logger.info(String.format("Successfully uploaded %s expenses for user %s in %s second(s)",
                 expenses.size(),
                 user,
                 duration / 1000));
