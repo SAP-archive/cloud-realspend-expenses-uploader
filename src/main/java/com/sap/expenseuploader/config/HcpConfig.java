@@ -86,9 +86,7 @@ public class HcpConfig
      * Fetches a CSRF token from RealSpend and authenticates.
      */
     public String getCsrfToken()
-        throws
-        IOException,
-        URISyntaxException
+        throws IOException, URISyntaxException
     {
         // Currently the caching is disabled, the token is refetched every time
         return fetchCsrfToken();
@@ -109,7 +107,7 @@ public class HcpConfig
             logger.error("URL was: " + uriBuilder.build());
             logger.error("Error is: " + getBodyFromResponse(response));
         }
-        if (responseCsrfHeader == null ) {
+        if( responseCsrfHeader == null ) {
             throw new RuntimeException("Failed to fetch CSRF token.");
         }
         String result = responseCsrfHeader.getValue();
@@ -126,5 +124,11 @@ public class HcpConfig
         throws IOException
     {
         return EntityUtils.toString(r.getEntity());
+    }
+
+    @Override
+    public String toString()
+    {
+        return String.format("url=%s, user=%s", this.hcpUrl, this.hcpUser);
     }
 }

@@ -36,8 +36,6 @@ public class ExcelOutput implements ExpenseOutput
     @Override
     public void putExpenses( List<Expense> expenses )
     {
-        logger.info("Writing expenses to excel file " + this.outputFile.getAbsolutePath() + " ...");
-
         int rowCount = 0;
 
         try {
@@ -83,6 +81,6 @@ public class ExcelOutput implements ExpenseOutput
             logger.error("Error writing to file: " + this.outputFile.getAbsolutePath());
             e.printStackTrace();
         }
-        logger.info("Wrote " + rowCount + " expenses into XLS file " + this.outputFile.getAbsolutePath());
+        logger.info("Wrote " + rowCount + " expense(s) into XLS file " + this.outputFile.getAbsolutePath());
     }
 }

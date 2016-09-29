@@ -111,14 +111,16 @@ public class ExpenseUploader
 
         // Prepare config for expenses, create inputs and outputs
         ExpenseInput expenseInput = null;
+        ErpExpenseInputConfig erpExpenseInputConfig = new ErpExpenseInputConfig();
         ExcelCostCenterConfig excelCostCenterConfig = new ExcelCostCenterConfig(configPath);
         List<ExpenseOutput> expenseOutputs = new ArrayList<>();
         if( cmd.hasOption("in_erp") ) {
-            expenseInput = new ErpInput(new ErpExpenseInputConfig(cmd.getOptionValue("in_erp"),
+            erpExpenseInputConfig = new ErpExpenseInputConfig(cmd.getOptionValue("in_erp"),
                 cmd.getOptionValue("ca"),
                 cmd.getOptionValue("f"),
                 cmd.getOptionValue("t"),
-                cmd.getOptionValue("p")), excelCostCenterConfig);
+                cmd.getOptionValue("p"));
+            expenseInput = new ErpInput(erpExpenseInputConfig, excelCostCenterConfig);
         }
         if( cmd.hasOption("in_xls") ) {
             if( expenseInput != null ) {
@@ -136,7 +138,7 @@ public class ExpenseUploader
                 System.exit(1);
             }
 
-            expenseOutputs.add(new ExpenseHcpOutput(hcpConfig, excelCostCenterConfig));
+            expenseOutputs.add(new ExpenseHcpOutput(hcpConfig, excelCostCenterConfig, erpExpenseInputConfig));
         }
         if( cmd.hasOption("out_xls") ) {
             expenseOutputs.add(new ExcelOutput(cmd.getOptionValue("out_xls")));

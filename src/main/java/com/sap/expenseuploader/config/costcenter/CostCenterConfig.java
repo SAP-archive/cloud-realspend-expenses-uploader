@@ -33,7 +33,7 @@ public abstract class CostCenterConfig
     /**
      * Returns all cost centers of one user
      */
-    public ArrayList<String> getCostCenters(String user )
+    public ArrayList<String> getCostCenters( String user )
     {
         return userCostCenters.get(user);
     }
@@ -47,7 +47,8 @@ public abstract class CostCenterConfig
     }
 
     @Override
-    public String toString() {
-        return this.userCostCenters.toString() + ", " + this.costCenterUsers.toString();
+    public String toString()
+    {
+        return this.userCostCenters.toString();
     }
 }

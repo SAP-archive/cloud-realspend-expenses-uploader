@@ -1,6 +1,7 @@
 package com.sap.expenseuploader.expenses.output;
 
 import com.google.gson.*;
+import com.sap.expenseuploader.config.ErpExpenseInputConfig;
 import com.sap.expenseuploader.config.HcpConfig;
 import com.sap.expenseuploader.config.costcenter.CostCenterConfig;
 import com.sap.expenseuploader.model.Expense;
@@ -17,6 +18,7 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.URISyntaxException;
+import java.nio.charset.Charset;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
@@ -37,11 +39,14 @@ public class ExpenseHcpOutput implements ExpenseOutput
 
     private HcpConfig hcpConfig;
     private CostCenterConfig costCenterConfig;
+    private ErpExpenseInputConfig erpExpenseInputConfig;
 
-    public ExpenseHcpOutput( HcpConfig hcpConfig, CostCenterConfig costCenterConfig )
+    public ExpenseHcpOutput( HcpConfig hcpConfig, CostCenterConfig costCenterConfig,
+        ErpExpenseInputConfig erpExpenseInputConfig )
     {
         this.hcpConfig = hcpConfig;
         this.costCenterConfig = costCenterConfig;
+        this.erpExpenseInputConfig = erpExpenseInputConfig;
     }
 
     @Override
@@ -128,7 +133,7 @@ public class ExpenseHcpOutput implements ExpenseOutput
                 if( resumeFlagSet ) {
                     // resume the previous upload
                     logger.info("Resuming the previous upload by retrying failed requests...");
-                    // TODO compare the hashcode of config. Resume if the same. Fail otherwise.
+                    assertCurrentConfigMatches();
                     for( String filename : failedRequestFilenames ) {
                         String batchName = filename.substring(0, filename.lastIndexOf("_"));
                         Path fullBatchFilepath = Paths.get(REQ_DUMP_FOLDER.toString(), batchName + ".json");
@@ -207,6 +212,10 @@ public class ExpenseHcpOutput implements ExpenseOutput
         payload.add("expenses", expensesAsJson);
         payload.addProperty("user", user);
 
+        // store the current config
+        assertRequestsFolderExists();
+        dumpConfig();
+
         // storing the requests as json
         dumpRequest("batch" + batchID, new GsonBuilder().setPrettyPrinting().create().toJson(payload));
 
@@ -270,10 +279,32 @@ public class ExpenseHcpOutput implements ExpenseOutput
                 REQ_DUMP_FOLDER.toString() + "/" + batchName + ".json"));
             return false;
         }
-
     }
 
-    private void dumpRequest( final String key, final String s )
+    private void assertCurrentConfigMatches()
+        throws IOException
+    {
+        final File file = new File(REQ_DUMP_FOLDER.toFile(), "config.txt");
+        List<String> oldConfig = Files.readAllLines(file.toPath(), Charset.forName("UTF-8"));
+        if( !oldConfig.get(0).equals(this.hcpConfig.toString()) ) {
+            logger.error("Your HCP config has changed, the old config was: " + oldConfig.get(0));
+            logger.error("Either revert to the previous config or remove the 'requests' folder");
+            System.exit(1);
+        }
+        if( !oldConfig.get(1).equals(this.costCenterConfig.toString()) ) {
+            logger.error("Your cost center config has changed, the old config was: " + oldConfig.get(1));
+            logger.error("Either revert to the previous config or remove the 'requests' folder");
+            System.exit(1);
+        }
+        if( !oldConfig.get(2).equals(this.erpExpenseInputConfig.toString()) ) {
+            logger.error("Your erp expense input config has changed, the old config was: " + oldConfig.get(2));
+            logger.error("Either revert to the previous config or remove the 'requests' folder");
+            System.exit(1);
+        }
+    }
+
+    private void assertRequestsFolderExists()
+        throws IOException
     {
         try {
             if( !Files.isDirectory(REQ_DUMP_FOLDER) ) {
@@ -282,9 +313,25 @@ public class ExpenseHcpOutput implements ExpenseOutput
         }
         catch( Exception e ) {
             logger.error("Failed to create the folder " + REQ_DUMP_FOLDER);
-            return;
+            throw e;
         }
+    }
 
+    private void dumpConfig()
+    {
+        final File file = new File(REQ_DUMP_FOLDER.toFile(), "config.txt");
+        try( PrintWriter writer = new PrintWriter(file) ) {
+            writer.write(this.hcpConfig.toString() + "\n");
+            writer.write(this.costCenterConfig.toString() + "\n");
+            writer.write(this.erpExpenseInputConfig.toString() + "\n");
+        }
+        catch( Exception e ) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void dumpRequest( final String key, final String s )
+    {
         final File file = new File(REQ_DUMP_FOLDER.toFile(), key + ".json");
         try( PrintWriter writer = new PrintWriter(file) ) {
             writer.write(s);

@@ -23,6 +23,11 @@ public class ErpExpenseInputConfig
     private String toTime;
     private String period;
 
+    public ErpExpenseInputConfig()
+    {
+
+    }
+
     public ErpExpenseInputConfig( String systemName, String controllingArea, String fromTime, String toTime,
         String period )
         throws IOException, ParseException
@@ -71,5 +76,16 @@ public class ErpExpenseInputConfig
         throws JCoException
     {
         return JCoDestinationManager.getDestination(this.systemName);
+    }
+
+    @Override
+    public String toString()
+    {
+        return String.format("system=%s, ca=%s, f=%s, t=%s, p=%s",
+            systemName,
+            controllingArea,
+            fromTime,
+            toTime,
+            period);
     }
 }
