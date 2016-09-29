@@ -37,7 +37,8 @@ public class ExcelInput implements ExpenseInput
         throws IOException
     {
         if (!this.inputFile.exists()) {
-            throw new IOException("Excel file does not exist: " + this.inputFile.getAbsolutePath());
+            logger.error("Can not read from Excel file at " + this.inputFile.getAbsolutePath());
+            System.exit(1);
         }
 
         List<Expense> expenses = new ArrayList<>();

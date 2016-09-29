@@ -24,7 +24,9 @@ public class Helper
     public static Set<String> getErpCostCenters( ErpExpenseInputConfig erpExpenseInputConfig )
         throws JCoException
     {
-        Logger logger = LogManager.getLogger(); // TODO add class
+        Logger logger = LogManager.getLogger(Helper.class);
+
+        logger.info("Reading cost centers from the ERP ...");
 
         JCoDestination destination = erpExpenseInputConfig.getJcoDestination();
         JCoRepository repository = destination.getRepository();

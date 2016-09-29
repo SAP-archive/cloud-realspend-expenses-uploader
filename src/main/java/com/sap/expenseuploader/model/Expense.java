@@ -27,6 +27,8 @@ public class Expense implements Comparable<Expense>
     private transient String requestID;
     private Double amount;
     private String currency;
+    @SerializedName( "document-id" )
+    private String documentNumber;
 
     private transient List<String> fields; // Transient to skip serialisation
 
@@ -79,6 +81,7 @@ public class Expense implements Comparable<Expense>
         if( this.currency == null || this.currency.equals("") ) {
             throw new RuntimeException("Field 'Currency' is mandatory, please insert the currency for all line items.");
         }
+        this.documentNumber = 10 < fields.size() ? fields.get(10) : null;
     }
 
     public int size()
@@ -140,6 +143,8 @@ public class Expense implements Comparable<Expense>
     {
         return requestID;
     }
+
+    public String getDocumentNumber() { return documentNumber; }
 
     public boolean isInCostCenter( List<String> costCenters )
     {

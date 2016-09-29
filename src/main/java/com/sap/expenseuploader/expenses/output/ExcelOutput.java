@@ -54,7 +54,8 @@ public class ExcelOutput implements ExpenseOutput
                 "Context",
                 "Request ID",
                 "Amount",
-                "Currency");
+                "Currency",
+                "Document Number");
             Row row = sheet.createRow(0);
             for( int j = 0; j < headers.size(); ++j ) {
                 Cell cell = row.createCell(j);

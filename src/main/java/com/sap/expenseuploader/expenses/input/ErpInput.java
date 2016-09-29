@@ -143,7 +143,8 @@ public class ErpInput implements ExpenseInput
                     lineItems.getString("SEG_TEXT"),
                     "",
                     lineItems.getString("VALUE_COCUR"),
-                    headerDocumentsMap.get(documentKey).getDocumentCurrency());
+                    headerDocumentsMap.get(documentKey).getDocumentCurrency(),
+                    Helper.stripLeadingZeros(lineItems.getString("DOC_NO")));
                 expenses.add(row);
                 logger.debug("Got expense: " + row.toString());
             }
