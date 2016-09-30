@@ -51,7 +51,7 @@ public class HcpConfig
                 logger.error("Unable to prompt for username!");
                 return null;
             }
-            this.hcpUser = System.console().readLine("HCP Username: ");
+            this.hcpUser = System.console().readLine("HCP user: ");
         }
         return this.hcpUser;
     }
@@ -64,7 +64,8 @@ public class HcpConfig
                 logger.error("Unable to prompt for password!");
                 return null;
             }
-            this.hcpPass = new String(System.console().readPassword("HCP Password: "));
+            String prompt = "HCP password for user '" + this.getHcpUser() + "': ";
+            this.hcpPass = new String(System.console().readPassword(prompt));
         }
         return this.hcpPass;
     }
