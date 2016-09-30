@@ -19,13 +19,13 @@ public class JsonCostCenterConfig extends CostCenterConfig
     private final Logger logger = LogManager.getLogger(this.getClass());
 
     public JsonCostCenterConfig()
-            throws IOException, ParseException
+        throws IOException, ParseException
     {
         this(COSTCENTERS_JSON);
     }
 
     public JsonCostCenterConfig( String path )
-            throws IOException, ParseException
+        throws IOException, ParseException
     {
         logger.debug("Reading cost centers for each user from JSON");
 

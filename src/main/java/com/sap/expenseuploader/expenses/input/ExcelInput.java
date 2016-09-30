@@ -18,7 +18,7 @@ import java.util.List;
  * Reads expenses from an excel sheet. This enables either uploading external expenses (not
  * from the ERP system), or modifying the expenses exported as excel from the ERP.
  * Example excel sheet can be found in /test/resources
- *
+ * <p>
  * The entire first sheet of the Excel file is used as input. Command line parameters are not respected.
  */
 public class ExcelInput implements ExpenseInput
@@ -36,7 +36,7 @@ public class ExcelInput implements ExpenseInput
     public List<Expense> getExpenses()
         throws IOException
     {
-        if (!this.inputFile.exists()) {
+        if( !this.inputFile.exists() ) {
             logger.error("Can not read from Excel file at " + this.inputFile.getAbsolutePath());
             System.exit(1);
         }
@@ -50,7 +50,7 @@ public class ExcelInput implements ExpenseInput
             try {
                 workbook = new XSSFWorkbook(inputStream);
             }
-            catch (Exception e) { // TODO catch the real exception
+            catch( Exception e ) { // TODO catch the real exception
                 logger.warn("Excel file of expenses is not in XLSX format, falling back to XLS");
                 inputStream.close();
                 inputStream = new FileInputStream(this.inputFile);

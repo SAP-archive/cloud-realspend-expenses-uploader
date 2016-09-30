@@ -20,7 +20,8 @@ public class ExcelBudgetConfig extends BudgetConfig
     private final Logger logger = LogManager.getLogger(this.getClass());
     private final DataFormatter dataFormatter = new DataFormatter();
 
-    public ExcelBudgetConfig(String path) throws IOException, InvalidFormatException
+    public ExcelBudgetConfig( String path )
+        throws IOException, InvalidFormatException
     {
         logger.debug("Reading budgets for each user from Excel");
 
@@ -35,24 +36,25 @@ public class ExcelBudgetConfig extends BudgetConfig
         readTagBudgets(workbook.getSheetAt(4));
     }
 
-    private void readOverallBudgets(XSSFSheet sheet) throws InvalidFormatException
+    private void readOverallBudgets( XSSFSheet sheet )
+        throws InvalidFormatException
     {
         Iterator<Row> rowIterator = sheet.iterator();
 
         // Skip header
-        if (rowIterator.hasNext()) {
+        if( rowIterator.hasNext() ) {
             rowIterator.next();
         } else {
             logger.error("There should be a header row here ...");
         }
 
-        while (rowIterator.hasNext()) {
+        while( rowIterator.hasNext() ) {
             Row row = rowIterator.next();
             Iterator<Cell> cellIterator = row.cellIterator();
 
             Cell cell = cellIterator.next();
             String year = dataFormatter.formatCellValue(cell);
-            if (year.isEmpty()) {
+            if( year.isEmpty() ) {
                 logger.debug("Skipping empty line ...");
                 continue;
             }
@@ -63,14 +65,12 @@ public class ExcelBudgetConfig extends BudgetConfig
             cell = cellIterator.next();
             String currency = dataFormatter.formatCellValue(cell);
 
-            if (!userOverallBudgets.containsKey(user)) {
+            if( !userOverallBudgets.containsKey(user) ) {
                 userOverallBudgets.put(user, new ArrayList<BudgetEntry>());
             }
-            if (hasExistingBudget(userOverallBudgets.get(user), year)) {
-                String errorMessage = String.format(
-                    "Duplicate overall budget detected for user %s and year %s",
-                    user, year
-                );
+            if( hasExistingBudget(userOverallBudgets.get(user), year) ) {
+                String errorMessage =
+                    String.format("Duplicate overall budget detected for user %s and year %s", user, year);
                 logger.error(errorMessage);
                 throw new InvalidFormatException(errorMessage);
             }
@@ -79,24 +79,25 @@ public class ExcelBudgetConfig extends BudgetConfig
         }
     }
 
-    private void readMasterDataBudgets(XSSFSheet sheet, String masterDataType) throws InvalidFormatException
+    private void readMasterDataBudgets( XSSFSheet sheet, String masterDataType )
+        throws InvalidFormatException
     {
         Iterator<Row> rowIterator = sheet.iterator();
 
         // Skip header
-        if (rowIterator.hasNext()) {
+        if( rowIterator.hasNext() ) {
             rowIterator.next();
         } else {
             logger.error("There should be a header row here ...");
         }
 
-        while (rowIterator.hasNext()) {
+        while( rowIterator.hasNext() ) {
             Row row = rowIterator.next();
             Iterator<Cell> cellIterator = row.cellIterator();
 
             Cell cell = cellIterator.next();
             String year = dataFormatter.formatCellValue(cell);
-            if (year.isEmpty()) {
+            if( year.isEmpty() ) {
                 logger.debug("Skipping empty line ...");
                 continue;
             }
@@ -109,20 +110,21 @@ public class ExcelBudgetConfig extends BudgetConfig
             cell = cellIterator.next();
             String currency = dataFormatter.formatCellValue(cell);
 
-            if (!userMasterDataBudgets.containsKey(user)) {
+            if( !userMasterDataBudgets.containsKey(user) ) {
                 userMasterDataBudgets.put(user, new HashMap<String, Map<String, List<BudgetEntry>>>());
             }
-            if (!userMasterDataBudgets.get(user).containsKey(masterDataType)) {
+            if( !userMasterDataBudgets.get(user).containsKey(masterDataType) ) {
                 userMasterDataBudgets.get(user).put(masterDataType, new HashMap<String, List<BudgetEntry>>());
             }
-            if (!userMasterDataBudgets.get(user).get(masterDataType).containsKey(masterDataName)) {
+            if( !userMasterDataBudgets.get(user).get(masterDataType).containsKey(masterDataName) ) {
                 userMasterDataBudgets.get(user).get(masterDataType).put(masterDataName, new ArrayList<BudgetEntry>());
             }
-            if (hasExistingBudget(userMasterDataBudgets.get(user).get(masterDataType).get(masterDataName), year)) {
-                String errorMessage = String.format(
-                    "Duplicate budget detected for user %s, %s '%s' and year %s",
-                    user, masterDataType, masterDataName, year
-                );
+            if( hasExistingBudget(userMasterDataBudgets.get(user).get(masterDataType).get(masterDataName), year) ) {
+                String errorMessage = String.format("Duplicate budget detected for user %s, %s '%s' and year %s",
+                    user,
+                    masterDataType,
+                    masterDataName,
+                    year);
                 logger.error(errorMessage);
                 throw new InvalidFormatException(errorMessage);
             }
@@ -131,23 +133,25 @@ public class ExcelBudgetConfig extends BudgetConfig
         }
     }
 
-    private void readTagBudgets(XSSFSheet sheet) throws InvalidFormatException {
+    private void readTagBudgets( XSSFSheet sheet )
+        throws InvalidFormatException
+    {
         Iterator<Row> rowIterator = sheet.iterator();
 
         // Skip header
-        if (rowIterator.hasNext()) {
+        if( rowIterator.hasNext() ) {
             rowIterator.next();
         } else {
             logger.error("There should be a header row here ...");
         }
 
-        while (rowIterator.hasNext()) {
+        while( rowIterator.hasNext() ) {
             Row row = rowIterator.next();
             Iterator<Cell> cellIterator = row.cellIterator();
 
             Cell cell = cellIterator.next();
             String year = dataFormatter.formatCellValue(cell);
-            if (year.isEmpty()) {
+            if( year.isEmpty() ) {
                 logger.debug("Skipping empty line ...");
                 continue;
             }
@@ -162,20 +166,22 @@ public class ExcelBudgetConfig extends BudgetConfig
             cell = cellIterator.next();
             String currency = dataFormatter.formatCellValue(cell);
 
-            if (!userTagBudgets.containsKey(user)) {
+            if( !userTagBudgets.containsKey(user) ) {
                 userTagBudgets.put(user, new HashMap<String, Map<String, List<BudgetEntry>>>());
             }
-            if (!userTagBudgets.get(user).containsKey(tagGroup)) {
+            if( !userTagBudgets.get(user).containsKey(tagGroup) ) {
                 userTagBudgets.get(user).put(tagGroup, new HashMap<String, List<BudgetEntry>>());
             }
-            if (!userTagBudgets.get(user).get(tagGroup).containsKey(tagName)) {
+            if( !userTagBudgets.get(user).get(tagGroup).containsKey(tagName) ) {
                 userTagBudgets.get(user).get(tagGroup).put(tagName, new ArrayList<BudgetEntry>());
             }
-            if (hasExistingBudget(userTagBudgets.get(user).get(tagGroup).get(tagName), year)) {
+            if( hasExistingBudget(userTagBudgets.get(user).get(tagGroup).get(tagName), year) ) {
                 String errorMessage = String.format(
                     "Duplicate budget detected for user %s, tag group %s, tag %s and year %s",
-                    user, tagGroup, tagName, year
-                );
+                    user,
+                    tagGroup,
+                    tagName,
+                    year);
                 logger.error(errorMessage);
                 throw new InvalidFormatException(errorMessage);
             }
@@ -184,19 +190,23 @@ public class ExcelBudgetConfig extends BudgetConfig
         }
     }
 
-    private double getBudgetFromCell(Cell cell, String type) throws InvalidFormatException {
-        if (cell.getCellType() != Cell.CELL_TYPE_NUMERIC) {
+    private double getBudgetFromCell( Cell cell, String type )
+        throws InvalidFormatException
+    {
+        if( cell.getCellType() != Cell.CELL_TYPE_NUMERIC ) {
             String errorMessage = String.format("Budget value '%s' (in %s budgets) is not a valid number!",
-                dataFormatter.formatCellValue(cell), type);
+                dataFormatter.formatCellValue(cell),
+                type);
             logger.error(errorMessage);
             throw new InvalidFormatException(errorMessage);
         }
         return cell.getNumericCellValue();
     }
 
-    private boolean hasExistingBudget(List<BudgetEntry> entries, String year) {
-        for (BudgetEntry entry: entries) {
-            if (entry.year == Long.parseLong(year)) {
+    private boolean hasExistingBudget( List<BudgetEntry> entries, String year )
+    {
+        for( BudgetEntry entry : entries ) {
+            if( entry.year == Long.parseLong(year) ) {
                 return true;
             }
         }

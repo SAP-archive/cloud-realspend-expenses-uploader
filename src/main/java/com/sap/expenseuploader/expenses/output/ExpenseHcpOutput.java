@@ -58,7 +58,7 @@ public class ExpenseHcpOutput implements ExpenseOutput
             // Check if we should resume an upload from earlier
             boolean hasPerformedResume = maybePerformResume();
 
-            if (hasPerformedResume) {
+            if( hasPerformedResume ) {
                 // Don't put expenses, the resume was enough
                 return;
             }
@@ -81,9 +81,7 @@ public class ExpenseHcpOutput implements ExpenseOutput
                 while( (batchCounter - 1) * MAX_BATCH_SIZE < userExpenses.size() ) {
                     int fromIndex = (batchCounter - 1) * MAX_BATCH_SIZE;
                     int toIndex = Math.min(batchCounter * MAX_BATCH_SIZE, userExpenses.size());
-                    uploadBatchExpenses(userExpenses.subList(fromIndex, toIndex),
-                        user,
-                        batchCounter);
+                    uploadBatchExpenses(userExpenses.subList(fromIndex, toIndex), user, batchCounter);
                     batchCounter++;
                 }
             }
@@ -136,7 +134,7 @@ public class ExpenseHcpOutput implements ExpenseOutput
         if( !this.hcpConfig.isResumeSet() ) {
             // In case resume is not set but the previous run wasn't successful. -> Force the user to use it
             logger.error(
-                    "There are failed requests from a previous run. Either delete them or resume their upload by setting the 'resume' flag.");
+                "There are failed requests from a previous run. Either delete them or resume their upload by setting the 'resume' flag.");
             System.exit(1);
         }
 
@@ -153,8 +151,7 @@ public class ExpenseHcpOutput implements ExpenseOutput
             if( reUploadRequest(payloadString, batchName) ) {
                 // Deleting the file with failed response in it
                 Files.delete(Paths.get(REQ_DUMP_FOLDER.toString(), filename));
-                logger.info(
-                    "Expenses stored in file " + fullBatchFilepath + " were successfully uploaded.");
+                logger.info("Expenses stored in file " + fullBatchFilepath + " were successfully uploaded.");
             }
         }
 

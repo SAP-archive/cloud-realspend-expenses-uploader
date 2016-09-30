@@ -144,7 +144,10 @@ public class Expense implements Comparable<Expense>
         return requestID;
     }
 
-    public String getDocumentNumber() { return documentNumber; }
+    public String getDocumentNumber()
+    {
+        return documentNumber;
+    }
 
     public boolean isInCostCenter( List<String> costCenters )
     {

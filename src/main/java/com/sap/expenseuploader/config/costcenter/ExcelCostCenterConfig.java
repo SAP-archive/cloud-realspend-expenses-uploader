@@ -20,8 +20,8 @@ public class ExcelCostCenterConfig extends CostCenterConfig
 {
     private final Logger logger = LogManager.getLogger(this.getClass());
 
-    public ExcelCostCenterConfig(String path)
-            throws InvalidFormatException, IOException
+    public ExcelCostCenterConfig( String path )
+        throws InvalidFormatException, IOException
     {
         logger.debug("Reading cost centers for each user from Excel");
 
@@ -35,20 +35,20 @@ public class ExcelCostCenterConfig extends CostCenterConfig
         Iterator<Row> rowIterator = expensesSheet.iterator();
 
         // Skip header
-        if (rowIterator.hasNext()) {
+        if( rowIterator.hasNext() ) {
             rowIterator.next();
         } else {
             logger.error("There should be rows here ...");
         }
 
-        while (rowIterator.hasNext()) {
+        while( rowIterator.hasNext() ) {
             Row row = rowIterator.next();
             Iterator<Cell> cellIterator = row.cellIterator();
 
             // Read line
             Cell cell = cellIterator.next();
             String user = dataFormatter.formatCellValue(cell);
-            if (user.isEmpty()) {
+            if( user.isEmpty() ) {
                 logger.debug("Skipping empty line ...");
                 continue;
             }
@@ -56,13 +56,13 @@ public class ExcelCostCenterConfig extends CostCenterConfig
             String costCenter = dataFormatter.formatCellValue(cell);
 
             // Store user -> cost center
-            if (!userCostCenters.containsKey(user)) {
+            if( !userCostCenters.containsKey(user) ) {
                 userCostCenters.put(user, new ArrayList<String>());
             }
             userCostCenters.get(user).add(Helper.stripLeadingZeros(costCenter));
 
             // Store cost center -> user
-            if (!costCenterUsers.containsKey(costCenter)) {
+            if( !costCenterUsers.containsKey(costCenter) ) {
                 costCenterUsers.put(costCenter, new ArrayList<String>());
             }
             costCenterUsers.get(costCenter).add(user);
