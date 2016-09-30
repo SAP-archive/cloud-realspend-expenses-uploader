@@ -149,6 +149,7 @@ public class ExpenseUploader
             if( !cmd.hasOption("f") || !cmd.hasOption("ca") ) {
                 logger.error("Please specify expense parameters 'from' and 'controlling-area'");
                 System.exit(1);
+
             }
         } else {
             logger.error("Please specify for expenses either no inputs and no outputs"

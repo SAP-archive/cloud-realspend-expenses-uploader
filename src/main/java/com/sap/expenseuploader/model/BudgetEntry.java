@@ -33,18 +33,19 @@ public class BudgetEntry
     }
 
     @Override
-    public boolean equals(Object other) {
-        if (!(other instanceof BudgetEntry)) {
+    public boolean equals( Object other )
+    {
+        if( !(other instanceof BudgetEntry) ) {
             return false;
         }
         BudgetEntry otherEntry = (BudgetEntry) other;
-        if (this.amount != otherEntry.amount) {
+        if( this.amount != otherEntry.amount ) {
             return false;
         }
-        if (!this.currency.equals(otherEntry.currency)) {
+        if( !this.currency.equals(otherEntry.currency) ) {
             return false;
         }
-        if (this.year != otherEntry.year) {
+        if( this.year != otherEntry.year ) {
             return false;
         }
         return true;

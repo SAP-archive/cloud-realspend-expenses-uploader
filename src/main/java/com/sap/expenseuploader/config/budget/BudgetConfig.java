@@ -18,9 +18,9 @@ public abstract class BudgetConfig
     // user -> master data type -> master data name -> entries
     protected final Map<String, Map<String, Map<String, List<BudgetEntry>>>> userMasterDataBudgets = new HashMap<>();
 
-    public List<BudgetEntry> getOverallBudgetsOfUser(String user)
+    public List<BudgetEntry> getOverallBudgetsOfUser( String user )
     {
-        if (!userOverallBudgets.containsKey(user)) {
+        if( !userOverallBudgets.containsKey(user) ) {
             // Immutable empty map
             return Collections.emptyList();
         }
@@ -72,9 +72,9 @@ public abstract class BudgetConfig
     }
 
     @Override
-    public String toString() {
-        return "Master data: " + userMasterDataBudgets.toString()
-                + ", Tags: " + userTagBudgets.toString()
-                + ", Overall: " + userOverallBudgets.toString();
+    public String toString()
+    {
+        return "Master data: " + userMasterDataBudgets.toString() + ", Tags: " + userTagBudgets.toString()
+            + ", Overall: " + userOverallBudgets.toString();
     }
 }
