@@ -34,6 +34,7 @@ Notes
 -----
 - You can find the Realspend-HCP-URL by navigating to the "RealSpend Launchpad" inside your HCP trial account. It's the part before "/core/".
 - You can place the "sapjco3" wherever suits you the best.
+- If you can't connect using JCO, you might have to add 127.0.0.1 as IP to your hostname in your hosts file.
 
 Configuration files
 -------------------
