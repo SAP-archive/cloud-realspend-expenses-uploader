@@ -5,43 +5,40 @@ Allows posting budgets and expenses to HCP RealSpend API through SAP ERP JCO con
 Prerequisites
 -------------
 - Java 1.6 or higher
-- Maven
+- Maven 3
 - sapjco3: https://websmp108.sap-ag.de/~sapidb/011000358700007415502002E/#2
-
-Run Instructions
-----------------
-- Make sure you have installed all the prerequisites on your local machine.
-- Clone the repository, and in the command-line change your current directory to it.
-- Edit the file system.jcoDestination and insert the correct credentials for the SAP ERP system.
-- Run the command shown in the **Build** section below. Now you see the generated "target" folder, which contains the executable jar file "expense-uploader-0.1-jar-with-dependencies.jar". Copy this jar and put it in a folder with all the required config files (see the notes section below). 
-- You can either run the shell script run.sh now, or simply copy the command shown under the **Run** section below and run it on the command-line. Make sure you replace the command line parameters with the correct desired values.
 
 Build
 -----
+- Clone the repository.
+- Edit the file system.jcoDestination and insert the correct credentials for the SAP ERP system.
+- Edit the pom.xml file and insert the correct path to JCO.
+- Run the following command:
 ```
-mvn clean package
+mvn clean package -DskipTests
 ```
+- Now you see the generated "target" folder, which contains the executable jar file "expense-uploader-0.1-jar-with-dependencies.jar".
+- Create a new folder somewhere (e.g. your home directory) and copy this jar into it. Also copy the files system.jcoDestination and src/test/resources/config/config.xlsx there. You should now have a folder with just these three files.
 
 Run
 ---
-- Run the jar like this:
+- Open a command line prompt in the folder you just created.
+- The hcp_proxy parameter is optional.
+- Run the jar like this (after replacing the parts inside <brackets>):
 ```
-java -cp ~/sapjco3/sapjco3.jar:expense-uploader-0.1-jar-with-dependencies.jar com.sap.expenseuploader.ExpenseUploader --from=20150301 --to=20150501 --controlling-area=0001 --input_erp=system --output_hcp --output_cli --hcp_url="https://<Realspend_HCP_URL>/core/basic/api/v1" --hcp_user=<your_hcp_username> --hcp_password=<your_hcp_password> --hcp_proxy=proxy.wdf.sap.corp:8080 --budgets --resume
+java -cp <path-to-jco>/sapjco3.jar:expense-uploader-0.1-jar-with-dependencies.jar com.sap.expenseuploader.ExpenseUploader --from=<starting-date> --to=<end-date> --controlling-area=<ca-code> --input_erp=system --output_hcp --hcp_url="https://<Realspend-HCP-URL>/core/basic/api/v1" --hcp_user=<your_hcp_username> --hcp_proxy=proxy.wdf.sap.corp:8080 --budgets
 ```
 
 Notes
 -----
-- All the config files of the script should be placed inside the created folder, just next to the jar file. This includes the input expenses excel sheets and the excel configuration file.
-- An example folder of this program should include minimally the following files: "config.xlsx" - "expense-uploader-0.1-jar-with-dependencies.jar" - "system.jcoDestination" 
-- Sample files of all those input and configuration files are located under src/test/resources. Just copy and modify them.
-- You need to execute the **Build** commands ideally only once you clone and setup the script. Later on you can just use the shell script or the command under the **Run** section
-- You can place the "sapjco3" wherever suits you the best, but in the command in the **Run** section we assume it's located in your user home directory (under unix-based operating systems). Just replace its path in the command if it's located somewhere else.
+- You can find the Realspend-HCP-URL by navigating to the "RealSpend Launchpad" inside your HCP trial account. It's the part before "/core/".
+- You can place the "sapjco3" wherever suits you the best.
 
 Configuration files
 -------------------
 - The configuration is done using the Excel file "config.xlsx".
-- On the first sheet you can specify, which user will receive actuals for which cost center.
-- On the subsequent sheets you can specify budgets for master data and tags.
+- On the first sheet you specify which user will receive actuals for which cost center.
+- On the subsequent sheets you specify budgets for master data and tags.
 
 License
 -------
