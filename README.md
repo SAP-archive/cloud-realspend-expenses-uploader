@@ -24,7 +24,7 @@ Run
 ---
 - Open a command line prompt in the folder you just created.
 - The hcp_proxy parameter is optional.
-- Run the jar like this (after replacing the parts inside <brackets>):
+- Run the jar like this (after replacing the parts inside angled brackets):
 ```
 java -cp <path-to-jco>/sapjco3.jar:expense-uploader-0.1-jar-with-dependencies.jar com.sap.expenseuploader.ExpenseUploader --from=<starting-date> --to=<end-date> --controlling-area=<ca-code> --input_erp=system --output_hcp --hcp_url="https://<Realspend-HCP-URL>/core/basic/api/v1" --hcp_user=<your_hcp_username> --hcp_proxy=proxy.wdf.sap.corp:8080 --budgets
 ```
