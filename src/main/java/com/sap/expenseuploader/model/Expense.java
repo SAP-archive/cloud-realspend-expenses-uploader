@@ -67,6 +67,9 @@ public class Expense implements Comparable<Expense>
         this.account = fields.get(3);
         this.requester = fields.get(4);
         this.internalOrder = fields.get(5);
+        if (this.internalOrder != null && this.internalOrder.isEmpty()) {
+            this.internalOrder = null; // Change empty string to null
+        }
         this.context = fields.get(6);
         this.requestID = fields.get(7);
         try {
