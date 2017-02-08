@@ -46,10 +46,8 @@
 			<groupId>com.sap.conn.jco</groupId>
 			<artifactId>sapjco3</artifactId>
 			<version>3.0.14</version>
-			<!--<scope>provided</scope>-->
-            <!-- TODO the following config is evil and should only be used for local tests -->
-            <scope>system</scope>
-            <systemPath>/Users/d065350/sapjco3/sapjco3.jar</systemPath>
+			<scope>system</scope>
+			<systemPath>ENTER YOUR PATH TO FILE sapjco3.jar</systemPath>
 		</dependency>
 		<dependency>
 			<groupId>commons-cli</groupId>
