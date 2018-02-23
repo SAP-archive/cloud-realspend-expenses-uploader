@@ -35,7 +35,7 @@ public class IntegrationTest {
             "--hcp_url",            "https://bmsfin-<your account here>.hanatrial.ondemand.com/core/basic/api/v1",
             "--hcp_user",           "your username here",
             "--hcp_password",       new String(Base64.decodeBase64("your password in base64 here".getBytes())),
-            "--hcp_proxy",          "proxy.wdf.sap.corp:8080",
+            "--hcp_proxy",          "proxy-server goes here",
             "--budgets",
             "--resume"
         };

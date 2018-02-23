@@ -27,7 +27,7 @@ Run
 - The hcp_user must have the roles "Governance", "Manager" and "API-User". It is advised to have only one user with the Governance role, as multiple may lead to conflicts.
 - Run the jar like this (after replacing the parts inside angled brackets):
 ```
-java -cp <path-to-jco>/sapjco3.jar:expense-uploader-0.1-jar-with-dependencies.jar com.sap.expenseuploader.ExpenseUploader --from=<starting-date> --to=<end-date> --controlling-area=<ca-code> --input_erp=system --output_hcp --hcp_url="https://<Realspend-HCP-URL>/core/basic/api/v1" --hcp_user=<your_hcp_username> --hcp_proxy=proxy.wdf.sap.corp:8080 --budgets
+java -cp <path-to-jco>/sapjco3.jar:expense-uploader-0.1-jar-with-dependencies.jar com.sap.expenseuploader.ExpenseUploader --from=<starting-date> --to=<end-date> --controlling-area=<ca-code> --input_erp=system --output_hcp --hcp_url="https://<Realspend-HCP-URL>/core/basic/api/v1" --hcp_user=<your_hcp_username> --hcp_proxy=<proxy-url> --budgets
 ```
 
 Notes
